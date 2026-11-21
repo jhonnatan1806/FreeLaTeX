@@ -102,7 +102,7 @@ npm run dev
 | Subir archivos o carpetas | Arrastra desde tu explorador al árbol, o el icono de subir |
 | Del código al PDF | Botón **Ir al PDF →** (o `Ctrl + Alt + J`): resalta en el PDF la línea del cursor |
 | Del PDF al código | Doble clic en el PDF: abre el archivo en esa línea |
-| Autocompletar | Escribe `\` para ver comandos; dentro de `ef{`, `\cite{`, `egin{`, `\input{`, `\includegraphics{` sugiere etiquetas, citas del `.bib`, entornos y archivos. `egin{...}` añade el `\end{...}` |
+| Autocompletar | Escribe `\` para ver comandos; dentro de `\ref{`, `\cite{`, `\begin{`, `\input{` e `\includegraphics{` sugiere etiquetas, citas del `.bib`, entornos y archivos. `\begin{...}` añade el `\end{...}` |
 | Buscar en todo el proyecto | Pestaña **Buscar** del panel izquierdo o `Ctrl + Shift + F` (opciones: mayúsculas y expresión regular) |
 | Archivo principal | Selector "Principal" arriba, o clic derecho sobre un `.tex` |
 
