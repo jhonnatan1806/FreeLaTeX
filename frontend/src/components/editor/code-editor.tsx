@@ -131,6 +131,7 @@ export function CodeEditor({ projectId, path }: CodeEditorProps) {
       const state = EditorState.create({
         doc: file?.text ?? "",
         extensions: editorExtensions({
+          projectId,
           path,
           // Como en Overleaf: Ctrl+S guarda y recompila.
           onSave: () => void useCompileStore.getState().compile(),

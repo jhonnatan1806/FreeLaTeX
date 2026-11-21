@@ -27,6 +27,7 @@ import {
 } from "@codemirror/view";
 import { tags as t } from "@lezer/highlight";
 import { extname } from "@/lib/paths";
+import { latexCompletionSource } from "./latex-completion";
 
 const latex = StreamLanguage.define(stex);
 const LATEX_EXT = new Set([".tex", ".sty", ".cls", ".ltx", ".dtx", ".ins", ".bbx", ".cbx", ".clo", ".def", ".bib"]);
@@ -78,6 +79,7 @@ const theme = EditorView.theme({
 });
 
 export interface SetupOptions {
+  projectId: string;
   path: string;
   onSave: () => void;
   onCompile: () => void;
@@ -86,7 +88,7 @@ export interface SetupOptions {
 }
 
 /** Extensiones de CodeMirror para un archivo. */
-export function editorExtensions({ path, onSave, onCompile, onSyncToPdf, onChange }: SetupOptions): Extension[] {
+export function editorExtensions({ projectId, path, onSave, onCompile, onSyncToPdf, onChange }: SetupOptions): Extension[] {
   const isLatex = LATEX_EXT.has(extname(path));
   return [
     lineNumbers(),
@@ -100,7 +102,12 @@ export function editorExtensions({ path, onSave, onCompile, onSyncToPdf, onChang
     indentOnInput(),
     bracketMatching(),
     closeBrackets(),
-    autocompletion({ activateOnTyping: false }),
+    autocompletion({
+      // Solo se activa con una barra invertida o dentro de argumentos (ref, cite, begin...).
+      activateOnTyping: true,
+      override: isLatex ? [latexCompletionSource(projectId, path)] : [],
+      icons: false,
+    }),
     rectangularSelection(),
     crosshairCursor(),
     highlightActiveLine(),

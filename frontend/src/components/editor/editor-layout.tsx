@@ -13,7 +13,7 @@ import { useCompileStore } from "@/store/compile-store";
 import { useEditorStore, type SaveStatus } from "@/store/editor-store";
 import { ENGINES, type Engine } from "@/types/project";
 import { EditorPane } from "./editor-pane";
-import { FileTree } from "./file-tree";
+import { SidePanel } from "./side-panel";
 
 const SAVE_LABEL: Record<SaveStatus, string> = {
   saved: "Guardado",
@@ -157,7 +157,7 @@ export function EditorLayout({ projectId }: { projectId: string }) {
       {ready && (
         <Group orientation="horizontal" className="min-h-0 flex-1">
           <Panel id="tree" defaultSize="18" minSize="10" maxSize="40">
-            <FileTree projectId={projectId} mainFile={project.mainFile} />
+            <SidePanel projectId={projectId} mainFile={project.mainFile} />
           </Panel>
           <ResizeHandle />
           <Panel id="editor" defaultSize="47" minSize="20">

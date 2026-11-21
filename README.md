@@ -100,6 +100,10 @@ npm run dev
 | Renombrar | `F2` sobre el elemento del árbol, o clic derecho → Renombrar |
 | Mover | Arrastra el archivo o carpeta sobre otra carpeta (o al espacio vacío para la raíz) |
 | Subir archivos o carpetas | Arrastra desde tu explorador al árbol, o el icono de subir |
+| Del código al PDF | Botón **Ir al PDF →** (o `Ctrl + Alt + J`): resalta en el PDF la línea del cursor |
+| Del PDF al código | Doble clic en el PDF: abre el archivo en esa línea |
+| Autocompletar | Escribe `\` para ver comandos; dentro de `ef{`, `\cite{`, `egin{`, `\input{`, `\includegraphics{` sugiere etiquetas, citas del `.bib`, entornos y archivos. `egin{...}` añade el `\end{...}` |
+| Buscar en todo el proyecto | Pestaña **Buscar** del panel izquierdo o `Ctrl + Shift + F` (opciones: mayúsculas y expresión regular) |
 | Archivo principal | Selector "Principal" arriba, o clic derecho sobre un `.tex` |
 
 ---
@@ -156,5 +160,5 @@ curl -F project=@ejemplo.zip -F mainFile=main.tex -F engine=pdflatex http://loca
 - [x] Fase 4: editor y árbol de archivos
 - [x] Fase 5: compilar y ver el PDF
 - [x] Fase 6: mapeo de errores
-- [ ] Fase 7: SyncTeX y autocompletado
+- [x] Fase 7: SyncTeX y autocompletado
 - [ ] Fase 8: producción

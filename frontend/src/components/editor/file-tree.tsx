@@ -345,7 +345,7 @@ export function FileTree({ projectId, mainFile }: FileTreeProps) {
   return (
     <div className="flex h-full min-h-0 flex-col bg-zinc-50 dark:bg-zinc-900/50">
       <div className="flex h-9 shrink-0 items-center justify-between border-b border-zinc-200 px-2 dark:border-zinc-800">
-        <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Archivos</span>
+        <span className="text-xs text-zinc-500">Proyecto</span>
         <div className="flex gap-0.5">
           <IconButton label="Nuevo archivo" onClick={() => startCreate("file")}>
             <FilePlusIcon />
