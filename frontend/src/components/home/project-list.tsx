@@ -24,12 +24,12 @@ export function ProjectList() {
   const [deleting, setDeleting] = useState<Project | null>(null);
 
   if (projects === undefined) {
-    return <p className="text-sm text-zinc-500">Cargando proyectos…</p>;
+    return <p className="text-sm text-fg-subtle">Cargando proyectos…</p>;
   }
 
   if (projects.length === 0) {
     return (
-      <p className="rounded-lg border border-zinc-200 p-6 text-center text-sm text-zinc-500 dark:border-zinc-800">
+      <p className="rounded-lg border border-dashed border-line p-6 text-center text-sm text-fg-subtle">
         Aún no tienes proyectos. Crea uno nuevo o sube un ZIP.
       </p>
     );
@@ -37,14 +37,14 @@ export function ProjectList() {
 
   return (
     <>
-      <ul className="divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+      <ul className="divide-y divide-line rounded-lg border border-line">
         {projects.map((p) => (
           <li key={p.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
             <div className="flex min-w-0 flex-1 flex-col">
               <Link href={`/project/${p.id}`} className="truncate font-medium hover:underline">
                 {p.name}
               </Link>
-              <span className="text-xs text-zinc-500">
+              <span className="text-xs text-fg-subtle">
                 {p.mainFile ?? "sin archivo principal"} · {p.engine} · modificado {timeAgo(p.updatedAt)}
               </span>
             </div>
@@ -64,7 +64,7 @@ export function ProjectList() {
               >
                 Descargar
               </Button>
-              <Button variant="ghost" className="text-red-600 dark:text-red-400" onClick={() => setDeleting(p)}>
+              <Button variant="ghost" className="text-danger-text" onClick={() => setDeleting(p)}>
                 Eliminar
               </Button>
             </div>

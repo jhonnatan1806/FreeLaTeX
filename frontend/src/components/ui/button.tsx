@@ -1,25 +1,31 @@
 import type { ButtonHTMLAttributes } from "react";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
+type Size = "sm" | "md";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-emerald-600 text-white hover:bg-emerald-700 disabled:bg-emerald-600/50",
-  secondary:
-    "border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800",
-  ghost: "text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800",
-  danger: "bg-red-600 text-white hover:bg-red-700 disabled:bg-red-600/50",
+  primary: "bg-accent text-accent-fg hover:bg-accent-hover disabled:opacity-50 disabled:hover:bg-accent",
+  secondary: "border border-line-strong bg-surface text-fg hover:bg-surface-hover disabled:opacity-50",
+  ghost: "text-fg-muted hover:bg-surface-hover hover:text-fg disabled:opacity-50",
+  danger: "bg-danger text-white hover:bg-danger-hover disabled:opacity-50",
+};
+
+const SIZES: Record<Size, string> = {
+  sm: "h-7 gap-1.5 px-2.5 text-xs",
+  md: "h-8 gap-2 px-3 text-sm",
 };
 
 export function Button({
   variant = "secondary",
+  size = "md",
   className = "",
   type = "button",
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size }) {
   return (
     <button
       type={type}
-      className={`inline-flex items-center justify-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-not-allowed ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-md font-medium whitespace-nowrap transition-colors disabled:cursor-not-allowed ${SIZES[size]} ${VARIANTS[variant]} ${className}`}
       {...props}
     />
   );

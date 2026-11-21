@@ -103,18 +103,20 @@ npm run dev
 |---|---|
 | Abrir un archivo | Clic en el árbol de la izquierda (se abre en una pestaña) |
 | Guardar | Automático al dejar de escribir |
-| Compilar | Botón **Recompilar**, `Ctrl + Enter` o `Ctrl + S` (guarda y compila). Marca **Auto** para compilar cada vez que se guarda |
+| Compilar | Botón **Compilar**, `Ctrl + Enter` o `Ctrl + S` (guarda y compila). Activa **Compilar al guardar** (o **Auto**, si el panel es estrecho) para compilar cada vez que se guarda |
 | Ver errores y avisos | Botón **Log** en la barra del PDF (muestra cuántos errores y avisos hay). Clic en `archivo, línea N` para saltar a esa línea. Los errores también se marcan en el margen del editor y con un punto rojo en el árbol |
 | Buscar / reemplazar | `Ctrl + F` dentro del editor |
 | Crear archivo o carpeta | Iconos de la barra del árbol, o clic derecho sobre una carpeta |
 | Renombrar | `F2` sobre el elemento del árbol, o clic derecho → Renombrar |
 | Mover | Arrastra el archivo o carpeta sobre otra carpeta (o al espacio vacío para la raíz) |
 | Subir archivos o carpetas | Arrastra desde tu explorador al árbol, o el icono de subir |
-| Del código al PDF | Botón **Ir al PDF →** (o `Ctrl + Alt + J`): resalta en el PDF la línea del cursor |
+| Del código al PDF | Botón **Ir al PDF** (icono de diana) (o `Ctrl + Alt + J`): resalta en el PDF la línea del cursor |
 | Del PDF al código | Doble clic en el PDF: abre el archivo en esa línea |
 | Autocompletar | Escribe `\` para ver comandos; dentro de `\ref{`, `\cite{`, `\begin{`, `\input{` e `\includegraphics{` sugiere etiquetas, citas del `.bib`, entornos y archivos. `\begin{...}` añade el `\end{...}` |
 | Buscar en todo el proyecto | Pestaña **Buscar** del panel izquierdo o `Ctrl + Shift + F` (opciones: mayúsculas y expresión regular) |
-| Archivo principal | Selector "Principal" arriba, o clic derecho sobre un `.tex` |
+| Archivo principal | Menú **Principal** (★) de la cabecera, o clic derecho sobre un `.tex` |
+| Descargar | Menú **Descargar** de la cabecera: el PDF o el proyecto en ZIP |
+| Tema claro / oscuro | Botón de la esquina superior derecha: alterna Sistema → Claro → Oscuro |
 
 ---
 

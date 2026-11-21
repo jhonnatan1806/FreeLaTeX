@@ -39,14 +39,19 @@ export function CodeEditor({ projectId, path }: CodeEditorProps) {
   // Crear la vista y el sistema de autoguardado.
   useEffect(() => {
     const pending = new Map<string, { timer: ReturnType<typeof setTimeout>; text: string }>();
+    /** Textos cuyo guardado falló: se reintentan en el siguiente flush (botón "Reintentar"). */
+    const failed = new Map<string, string>();
     const setStatus = useEditorStore.getState().setSaveStatus;
 
     const write = async (p: string, text: string) => {
       try {
         await saveFileText(projectId, p, text);
-        if (pending.size === 0) setStatus("saved");
+        failed.delete(p);
+        if (pending.size === 0) setStatus(failed.size === 0 ? "saved" : "error");
       } catch (err) {
         console.error("No se pudo guardar", p, err);
+        // Si mientras tanto hay una versión más nueva pendiente, esa la sustituye.
+        if (!pending.has(p)) failed.set(p, text);
         setStatus("error");
       }
     };
@@ -59,6 +64,7 @@ export function CodeEditor({ projectId, path }: CodeEditorProps) {
         void write(p, text);
       }, AUTOSAVE_MS);
       pending.set(p, { timer, text });
+      failed.delete(p);
       setStatus("saving");
     };
 
@@ -66,7 +72,13 @@ export function CodeEditor({ projectId, path }: CodeEditorProps) {
       const entries = [...pending.entries()];
       pending.clear();
       for (const [, { timer }] of entries) clearTimeout(timer);
-      await Promise.all(entries.map(([p, { text }]) => write(p, text)));
+      const retries = [...failed.entries()].filter(([p]) => !entries.some(([q]) => q === p));
+      if (entries.length + retries.length === 0) return;
+      setStatus("saving");
+      await Promise.all([
+        ...entries.map(([p, { text }]) => write(p, text)),
+        ...retries.map(([p, text]) => write(p, text)),
+      ]);
     };
 
     const view = new EditorView({ parent: hostRef.current!, state: EditorState.create() });
@@ -80,7 +92,7 @@ export function CodeEditor({ projectId, path }: CodeEditorProps) {
     });
 
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (pending.size > 0) {
+      if (pending.size > 0 || failed.size > 0) {
         void flush();
         e.preventDefault();
       }

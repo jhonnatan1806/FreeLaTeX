@@ -13,7 +13,7 @@ function ProjectFromUrl() {
 // El id de la URL solo existe en tiempo de ejecución, por eso va en <Suspense>.
 export default function ProjectPage() {
   return (
-    <Suspense fallback={<p className="p-8 text-sm text-zinc-500">Cargando…</p>}>
+    <Suspense fallback={<p className="p-8 text-sm text-fg-subtle">Cargando…</p>}>
       <ProjectFromUrl />
     </Suspense>
   );

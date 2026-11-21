@@ -53,7 +53,7 @@ export function SearchPanel({ projectId, focusToken }: SearchPanelProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex shrink-0 flex-col gap-1.5 border-b border-zinc-200 p-2 dark:border-zinc-800">
+      <div className="flex shrink-0 flex-col gap-1.5 border-b border-line p-2">
         <div className="flex items-center gap-1">
           <input
             ref={inputRef}
@@ -61,7 +61,7 @@ export function SearchPanel({ projectId, focusToken }: SearchPanelProps) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar en el proyecto"
             aria-label="Buscar en el proyecto"
-            className="min-w-0 flex-1 rounded border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 focus:border-emerald-600 focus:outline-none dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+            className="min-w-0 flex-1 rounded-md border border-line-strong bg-surface px-2 py-1 text-sm text-fg placeholder:text-fg-subtle focus:border-accent focus:outline-none"
           />
           <Toggle active={caseSensitive} onClick={() => setCaseSensitive((v) => !v)} label="Distinguir mayúsculas">
             Aa
@@ -71,7 +71,7 @@ export function SearchPanel({ projectId, focusToken }: SearchPanelProps) {
           </Toggle>
         </div>
         {result && (
-          <p className={`text-xs ${result.error ? "text-red-600" : "text-zinc-500"}`}>
+          <p className={`text-xs ${result.error ? "text-danger-text" : "text-fg-subtle"}`}>
             {result.error
               ? `Expresión no válida: ${result.error}`
               : `${result.matches.length}${result.truncated ? "+" : ""} resultados en ${groups.size} archivos`}
@@ -82,8 +82,8 @@ export function SearchPanel({ projectId, focusToken }: SearchPanelProps) {
       <div className="min-h-0 flex-1 overflow-auto py-1 text-xs">
         {[...groups].map(([path, matches]) => (
           <div key={path} className="mb-1">
-            <p className="truncate px-2 py-1 font-semibold text-zinc-700 dark:text-zinc-300" title={path}>
-              {path} <span className="font-normal text-zinc-500">({matches.length})</span>
+            <p className="truncate px-2 py-1 font-semibold text-fg" title={path}>
+              {path} <span className="font-normal text-fg-subtle">({matches.length})</span>
             </p>
             <ul>
               {matches.map((m, i) => (
@@ -91,12 +91,12 @@ export function SearchPanel({ projectId, focusToken }: SearchPanelProps) {
                   <button
                     type="button"
                     onClick={() => goTo(m.path, m.line)}
-                    className="flex w-full gap-2 px-2 py-0.5 text-left font-mono hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                    className="flex w-full gap-2 px-2 py-0.5 text-left font-mono hover:bg-surface-hover"
                   >
-                    <span className="w-8 shrink-0 text-right text-zinc-400">{m.line}</span>
-                    <span className="min-w-0 truncate text-zinc-600 dark:text-zinc-400">
+                    <span className="w-8 shrink-0 text-right text-fg-subtle">{m.line}</span>
+                    <span className="min-w-0 truncate text-fg-muted">
                       {m.text.slice(0, m.start)}
-                      <mark className="rounded-sm bg-amber-200 text-zinc-900 dark:bg-amber-500/40 dark:text-zinc-100">
+                      <mark className="rounded-sm bg-[var(--cm-search)] text-fg">
                         {m.text.slice(m.start, m.end)}
                       </mark>
                       {m.text.slice(m.end)}
@@ -121,7 +121,7 @@ function Toggle({ active, onClick, label, children }: { active: boolean; onClick
       aria-label={label}
       aria-pressed={active}
       className={`rounded px-1.5 py-1 font-mono text-xs ${
-        active ? "bg-emerald-600 text-white" : "text-zinc-600 hover:bg-zinc-200 dark:text-zinc-400 dark:hover:bg-zinc-800"
+        active ? "bg-accent text-accent-fg" : "text-fg-muted hover:bg-surface-hover"
       }`}
     >
       {children}

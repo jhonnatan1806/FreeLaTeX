@@ -1,7 +1,8 @@
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
+import { ChevronDownIcon } from "./icons";
 
 const CONTROL =
-  "w-full rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100";
+  "w-full rounded-md border border-line-strong bg-surface px-3 py-1.5 text-sm text-fg placeholder:text-fg-subtle focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none";
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -16,6 +17,16 @@ export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input type="text" {...props} className={`${CONTROL} ${props.className ?? ""}`} />;
 }
 
+/** <select> nativo (accesible y con buen soporte móvil) con flecha propia. */
 export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className={`${CONTROL} ${props.className ?? ""}`} />;
+  return (
+    <span className="relative flex">
+      <select {...props} className={`${CONTROL} appearance-none pr-8 ${props.className ?? ""}`} />
+      <ChevronDownIcon
+        width={14}
+        height={14}
+        className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-fg-subtle"
+      />
+    </span>
+  );
 }

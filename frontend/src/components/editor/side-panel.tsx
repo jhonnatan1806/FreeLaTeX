@@ -24,8 +24,8 @@ export const SidePanel = memo(function SidePanel({ projectId, mainFile }: { proj
   }, []);
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-zinc-50 dark:bg-zinc-900/50">
-      <div role="tablist" className="flex h-8 shrink-0 border-b border-zinc-200 text-xs dark:border-zinc-800">
+    <div className="flex h-full min-h-0 flex-col bg-surface-muted">
+      <div role="tablist" className="flex h-9 shrink-0 border-b border-line text-xs">
         <Tab active={view === "files"} onClick={() => setView("files")}>
           Archivos
         </Tab>
@@ -59,10 +59,10 @@ function Tab({ active, onClick, title, children }: { active: boolean; onClick: (
       aria-selected={active}
       onClick={onClick}
       title={title}
-      className={`flex-1 border-b-2 font-semibold uppercase tracking-wide ${
+      className={`flex-1 border-b-2 font-medium ${
         active
-          ? "border-emerald-600 text-zinc-900 dark:text-zinc-100"
-          : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+          ? "border-accent text-fg"
+          : "border-transparent text-fg-subtle hover:text-fg"
       }`}
     >
       {children}

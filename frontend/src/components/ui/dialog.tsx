@@ -33,7 +33,7 @@ export function Dialog({ open, onClose, title, children, footer }: DialogProps) 
         // Clic en el fondo (fuera del contenido) cierra.
         if (e.target === ref.current) onClose();
       }}
-      className="m-auto w-[min(32rem,calc(100vw-2rem))] rounded-lg bg-white p-0 text-zinc-900 shadow-xl backdrop:bg-black/40 dark:bg-zinc-900 dark:text-zinc-100"
+      className="m-auto w-[min(32rem,calc(100vw-2rem))] rounded-xl border border-line bg-surface p-0 text-fg shadow-xl backdrop:bg-overlay"
     >
       {open && (
         <div className="flex flex-col gap-4 p-5">

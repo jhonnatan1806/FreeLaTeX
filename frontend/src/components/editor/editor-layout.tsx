@@ -4,9 +4,21 @@ import Link from "next/link";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect, useMemo } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
-import { Button } from "@/components/ui/button";
+import { DropdownMenu } from "@/components/ui/dropdown-menu";
+import {
+  AlertIcon,
+  ArchiveIcon,
+  CheckIcon,
+  DownloadIcon,
+  FileTextIcon,
+  Logo,
+  Spinner,
+  StarIcon,
+} from "@/components/ui/icons";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Tooltip } from "@/components/ui/tooltip";
 import { db } from "@/lib/db";
-import { extname } from "@/lib/paths";
+import { basename, extname } from "@/lib/paths";
 import { downloadBytes, exportProjectZip, updateProjectSettings } from "@/lib/projects";
 import { PdfPanel } from "@/components/pdf/pdf-panel";
 import { useCompileStore } from "@/store/compile-store";
@@ -81,17 +93,17 @@ export function EditorLayout({ projectId }: { projectId: string }) {
     };
   }, []);
 
-  if (project === undefined) return <p className="p-8 text-sm text-zinc-500">Cargando…</p>;
+  if (project === undefined) return <p className="p-8 text-sm text-fg-subtle">Cargando…</p>;
 
   if (project === null) {
     return (
       <main className="mx-auto flex max-w-xl flex-col items-center gap-4 p-16 text-center">
         <h1 className="text-xl font-semibold">Proyecto no encontrado</h1>
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-fg-subtle">
           Los proyectos se guardan en el navegador donde se crearon. Puede que se haya eliminado o que estés en otro
           navegador.
         </p>
-        <Link href="/" className="text-emerald-600 hover:underline">
+        <Link href="/" className="text-accent-text hover:underline">
           Volver al inicio
         </Link>
       </main>
@@ -100,58 +112,64 @@ export function EditorLayout({ projectId }: { projectId: string }) {
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
-      <header className="flex h-11 shrink-0 items-center gap-3 border-b border-zinc-200 px-3 text-sm dark:border-zinc-800">
-        <Link href="/" className="font-semibold text-emerald-700 hover:underline dark:text-emerald-400" title="Mis proyectos">
-          FreeLaTeX
+      <header className="flex h-11 shrink-0 items-center gap-2 border-b border-line bg-surface px-3 text-sm">
+        <Link
+          href="/"
+          className="flex shrink-0 items-center gap-2 rounded-md font-semibold text-fg hover:text-accent-text"
+          title="Mis proyectos"
+        >
+          <Logo size={22} />
+          <span className="hidden sm:inline">FreeLaTeX</span>
         </Link>
-        <span className="text-zinc-300 dark:text-zinc-700">/</span>
+        <span className="text-line-strong" aria-hidden="true">
+          /
+        </span>
         <h1 className="min-w-0 truncate font-medium">{project.name}</h1>
+        <SaveIndicator status={saveStatus} />
 
-        <div className="ml-auto flex items-center gap-2">
-          <span
-            className={`hidden text-xs sm:inline ${saveStatus === "error" ? "text-red-600" : "text-zinc-500"}`}
-            aria-live="polite"
-          >
-            {SAVE_LABEL[saveStatus]}
-          </span>
-          <label className="flex items-center gap-1.5 text-xs text-zinc-500">
-            <span className="hidden md:inline">Principal</span>
-            <select
-              value={project.mainFile ?? ""}
-              onChange={(e) => updateProjectSettings(projectId, { mainFile: e.target.value || null })}
-              className="max-w-44 rounded border border-zinc-300 bg-white px-1.5 py-1 text-xs text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-            >
-              {!project.mainFile && <option value="">— Elige —</option>}
-              {texFiles.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-          </label>
-          <select
-            aria-label="Compilador"
-            value={project.engine}
-            onChange={(e) => updateProjectSettings(projectId, { engine: e.target.value as Engine })}
-            className="rounded border border-zinc-300 bg-white px-1.5 py-1 text-xs text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-          >
-            {ENGINES.map((engine) => (
-              <option key={engine} value={engine}>
-                {engine}
-              </option>
-            ))}
-          </select>
-          <DownloadPdfButton name={project.name} />
-          <Button
-            className="!py-1 text-xs"
-            onClick={async () => {
-              await useEditorStore.getState().flushSaves();
-              const { filename, bytes } = await exportProjectZip(projectId);
-              downloadBytes(filename, bytes);
-            }}
-          >
-            Descargar ZIP
-          </Button>
+        <div className="ml-auto flex items-center gap-1.5">
+          <DropdownMenu
+            label="Archivo principal"
+            tooltip="Archivo que se compila"
+            align="end"
+            className={project.mainFile ? "" : "border-warning-line bg-warning-soft text-warning-text"}
+            trigger={
+              <>
+                <StarIcon width={13} height={13} className="shrink-0 fill-amber-400 text-amber-500" />
+                <span className="hidden text-fg-subtle lg:inline">Principal:</span>
+                <span className="max-w-36 truncate">{project.mainFile ? basename(project.mainFile) : "Elegir…"}</span>
+              </>
+            }
+            items={
+              texFiles.length === 0
+                ? [{ label: "No hay archivos .tex", onSelect: () => {}, disabled: true }]
+                : texFiles.map((p) => ({
+                    label: p,
+                    checked: p === project.mainFile,
+                    onSelect: () => updateProjectSettings(projectId, { mainFile: p }),
+                  }))
+            }
+          />
+          <DropdownMenu
+            label="Motor de compilación"
+            tooltip="Motor de compilación"
+            align="end"
+            trigger={
+              <>
+                <span className="hidden text-fg-subtle lg:inline">Motor:</span>
+                {ENGINE_LABEL[project.engine]}
+              </>
+            }
+            items={ENGINES.map((engine) => ({
+              label: ENGINE_LABEL[engine],
+              hint: ENGINE_HINT[engine],
+              checked: engine === project.engine,
+              onSelect: () => updateProjectSettings(projectId, { engine }),
+            }))}
+          />
+          <DownloadMenu projectId={projectId} name={project.name} />
+          <span className="mx-0.5 h-5 w-px bg-line" aria-hidden="true" />
+          <ThemeToggle />
         </div>
       </header>
 
@@ -174,18 +192,90 @@ export function EditorLayout({ projectId }: { projectId: string }) {
   );
 }
 
-function DownloadPdfButton({ name }: { name: string }) {
-  const pdf = useCompileStore((s) => s.pdf);
-  if (!pdf) return null;
+const ENGINE_LABEL: Record<Engine, string> = { pdflatex: "pdfLaTeX", xelatex: "XeLaTeX", lualatex: "LuaLaTeX" };
+const ENGINE_HINT: Record<Engine, string> = {
+  pdflatex: "El más común",
+  xelatex: "Fuentes del sistema",
+  lualatex: "Fuentes y Lua",
+};
+
+/** Estado del autoguardado: siempre visible (icono) y con texto en pantallas anchas. */
+function SaveIndicator({ status }: { status: SaveStatus }) {
+  if (status === "error") {
+    return (
+      <Tooltip content="No se pudieron guardar los últimos cambios. Pulsa para reintentar.">
+        <button
+          type="button"
+          onClick={() => void useEditorStore.getState().flushSaves()}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-danger-line bg-danger-soft px-2 py-0.5 text-xs font-medium text-danger-text hover:brightness-95"
+        >
+          <AlertIcon width={14} height={14} />
+          <span className="hidden sm:inline">Error al guardar ·</span> Reintentar
+        </button>
+      </Tooltip>
+    );
+  }
+  const saving = status === "saving";
   return (
-    <Button className="!py-1 text-xs" onClick={() => downloadBytes(`${name}.pdf`, pdf, "application/pdf")}>
-      Descargar PDF
-    </Button>
+    <Tooltip content={saving ? "Guardando en este navegador…" : "Todos los cambios están guardados en este navegador"}>
+      <span
+        role="status"
+        aria-label={SAVE_LABEL[status]}
+        tabIndex={0}
+        className="inline-flex shrink-0 items-center gap-1 rounded text-xs text-fg-subtle"
+      >
+        {saving ? <Spinner size={12} /> : <CheckIcon width={14} height={14} className="text-accent-text" />}
+        <span className="hidden md:inline">{SAVE_LABEL[status]}</span>
+      </span>
+    </Tooltip>
   );
 }
 
+/** Descargas agrupadas: PDF (si hay) y el proyecto en ZIP. */
+function DownloadMenu({ projectId, name }: { projectId: string; name: string }) {
+  const pdf = useCompileStore((s) => s.pdf);
+  return (
+    <DropdownMenu
+      label="Descargar"
+      align="end"
+      trigger={
+        <>
+          <DownloadIcon width={14} height={14} className="shrink-0" />
+          <span className="hidden md:inline">Descargar</span>
+        </>
+      }
+      items={[
+        {
+          label: "PDF",
+          icon: <FileTextIcon width={14} height={14} />,
+          hint: pdf ? undefined : "Compila primero",
+          disabled: !pdf,
+          onSelect: () => pdf && downloadBytes(`${name}.pdf`, pdf, "application/pdf"),
+        },
+        {
+          label: "Proyecto (.zip)",
+          icon: <ArchiveIcon width={14} height={14} />,
+          onSelect: async () => {
+            await useEditorStore.getState().flushSaves();
+            const { filename, bytes } = await exportProjectZip(projectId);
+            downloadBytes(filename, bytes);
+          },
+        },
+      ]}
+    />
+  );
+}
+
+/** Separador con zona de arrastre amplia, línea fina y asa visible al pasar el ratón. */
 function ResizeHandle() {
   return (
-    <Separator className="w-1 shrink-0 bg-zinc-200 transition-colors hover:bg-emerald-500 data-[separator=active]:bg-emerald-600 dark:bg-zinc-800" />
+    <Separator className="group relative z-10 -mx-[3px] flex w-[7px] shrink-0 cursor-col-resize items-center justify-center outline-none">
+      <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-line transition-colors group-hover:w-0.5 group-hover:bg-accent group-focus-visible:w-0.5 group-focus-visible:bg-accent group-data-[separator=active]:w-0.5 group-data-[separator=active]:bg-accent" />
+      <span className="relative flex h-8 w-1.5 flex-col items-center justify-center gap-0.5 rounded-full bg-surface opacity-0 ring-1 ring-line-strong transition-opacity group-hover:opacity-100 group-data-[separator=active]:opacity-100">
+        <span className="h-0.5 w-0.5 rounded-full bg-fg-subtle" />
+        <span className="h-0.5 w-0.5 rounded-full bg-fg-subtle" />
+        <span className="h-0.5 w-0.5 rounded-full bg-fg-subtle" />
+      </span>
+    </Separator>
   );
 }

@@ -33,6 +33,8 @@ interface PdfViewerProps {
   highlight?: PdfHighlight | null;
   /** Doble clic en una página, en puntos PDF desde arriba a la izquierda (PDF → código). */
   onPageDoubleClick?: (page: number, x: number, y: number) => void;
+  /** Página que ocupa la zona de lectura (tercio superior de la vista), al desplazarse. */
+  onPageChange?: (page: number) => void;
 }
 
 interface PageInfo {
@@ -55,7 +57,14 @@ function enqueueRender(job: () => Promise<void>): void {
   renderQueue = renderQueue.then(job, job);
 }
 
-export function PdfViewer({ data, zoom, onInfo, highlight, onPageDoubleClick }: PdfViewerProps) {
+export const PdfViewer = memo(function PdfViewer({
+  data,
+  zoom,
+  onInfo,
+  highlight,
+  onPageDoubleClick,
+  onPageChange,
+}: PdfViewerProps) {
   // Estado (no ref) porque las páginas lo usan como raíz del IntersectionObserver.
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const [pages, setPages] = useState<PageInfo[]>([]);
@@ -123,6 +132,39 @@ export function PdfViewer({ data, zoom, onInfo, highlight, onPageDoubleClick }: 
     });
   }, [container, highlight, pages.length, scale]);
 
+  // Página actual: la que cruza el tercio superior de la vista (búsqueda binaria por offsetTop).
+  useEffect(() => {
+    if (!container || !onPageChange || pages.length === 0) return;
+    let frame = 0;
+    let last = 0;
+    const update = () => {
+      frame = 0;
+      const els = container.querySelectorAll<HTMLElement>("[data-page]");
+      const line = container.scrollTop + container.clientHeight / 3;
+      let lo = 0;
+      let hi = els.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (els[mid].offsetTop <= line) lo = mid;
+        else hi = mid - 1;
+      }
+      const page = lo + 1;
+      if (page !== last) {
+        last = page;
+        onPageChange(page);
+      }
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    container.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      container.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, [container, onPageChange, pages.length, scale]);
+
   return (
     <div
       ref={(el) => {
@@ -130,8 +172,8 @@ export function PdfViewer({ data, zoom, onInfo, highlight, onPageDoubleClick }: 
         if (el && el !== container) setContainerWidth(el.clientWidth);
         setContainer(el);
       }}
-      className="h-full overflow-auto bg-zinc-200 dark:bg-zinc-800">
-      {error && <p className="p-4 text-sm text-red-600">No se pudo mostrar el PDF: {error}</p>}
+      className="h-full overflow-auto bg-surface-sunken">
+      {error && <p className="p-4 text-sm text-danger-text">No se pudo mostrar el PDF: {error}</p>}
       <div className="flex flex-col items-center" style={{ padding: PADDING, gap: PAGE_GAP }}>
         {containerWidth > 0 &&
           pages.map((info, i) => (
@@ -148,7 +190,7 @@ export function PdfViewer({ data, zoom, onInfo, highlight, onPageDoubleClick }: 
       </div>
     </div>
   );
-}
+});
 
 interface PdfPageProps {
   number: number;

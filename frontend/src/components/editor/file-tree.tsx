@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ContextMenu, type MenuEntry } from "@/components/ui/context-menu";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, TextInput } from "@/components/ui/field";
+import { IconButton } from "@/components/ui/icon-button";
 import {
   ChevronIcon,
   DotsIcon,
@@ -260,13 +261,13 @@ export function FileTree({ projectId, mainFile }: FileTreeProps) {
           }}
           tabIndex={0}
           style={{ paddingLeft: 6 + depth * 14 }}
-          className={`group flex h-7 cursor-pointer select-none items-center gap-1.5 pr-1 text-sm outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-emerald-600 ${
+          className={`group flex h-7 cursor-pointer select-none items-center gap-1.5 pr-1 text-sm outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus ${
             isActive
-              ? "bg-emerald-100 text-emerald-950 dark:bg-emerald-900/40 dark:text-emerald-100"
+              ? "bg-accent-soft text-accent-soft-fg"
               : isSelected
-                ? "bg-zinc-200/70 dark:bg-zinc-800"
-                : "hover:bg-zinc-100 dark:hover:bg-zinc-800/60"
-          } ${isFolder && dropTarget === node.path ? "ring-1 ring-inset ring-emerald-500" : ""}`}
+                ? "bg-surface-active"
+                : "hover:bg-surface-hover"
+          } ${isFolder && dropTarget === node.path ? "ring-2 ring-inset ring-accent" : ""}`}
           title={node.path}
         >
           {isFolder ? (
@@ -274,7 +275,7 @@ export function FileTree({ projectId, mainFile }: FileTreeProps) {
               <ChevronIcon
                 width={12}
                 height={12}
-                className={`shrink-0 text-zinc-400 transition-transform ${isOpen ? "rotate-90" : ""}`}
+                className={`shrink-0 text-fg-subtle transition-transform ${isOpen ? "rotate-90" : ""}`}
               />
               <FolderIcon className="shrink-0 text-amber-500" />
             </>
@@ -282,9 +283,9 @@ export function FileTree({ projectId, mainFile }: FileTreeProps) {
             <>
               <span className="w-3 shrink-0" />
               {IMAGE_EXT.has(ext) ? (
-                <ImageIcon className="shrink-0 text-sky-500" />
+                <ImageIcon className="shrink-0 text-info" />
               ) : (
-                <FileIcon className={`shrink-0 ${ext === ".tex" ? "text-emerald-600" : "text-zinc-400"}`} />
+                <FileIcon className={`shrink-0 ${ext === ".tex" ? "text-accent" : ext === ".bib" ? "text-info" : "text-fg-subtle"}`} />
               )}
             </>
           )}
@@ -311,14 +312,14 @@ export function FileTree({ projectId, mainFile }: FileTreeProps) {
                 if (cancelRename.current) cancelRename.current = false;
                 else commitRename(node, e.currentTarget.value);
               }}
-              className="min-w-0 flex-1 rounded border border-emerald-600 bg-white px-1 text-sm text-zinc-900 outline-none dark:bg-zinc-950 dark:text-zinc-100"
+              className="min-w-0 flex-1 rounded border border-accent bg-surface px-1 text-sm text-fg outline-none"
             />
           ) : (
             <span className="min-w-0 flex-1 truncate">{node.name}</span>
           )}
 
           {errorFiles.some((f) => (isFolder ? isWithin(f, node.path) : f === node.path)) && (
-            <span className="h-2 w-2 shrink-0 rounded-full bg-red-500" title="Tiene errores de compilación" />
+            <span className="h-2 w-2 shrink-0 rounded-full bg-danger" role="img" aria-label="Tiene errores de compilación" title="Tiene errores de compilación" />
           )}
           {isMain && (
             <StarIcon width={13} height={13} className="shrink-0 fill-amber-400 text-amber-500" aria-label="Archivo principal" />
@@ -332,7 +333,7 @@ export function FileTree({ projectId, mainFile }: FileTreeProps) {
               store.select(node.path);
               setMenu({ x: rect.left, y: rect.bottom, node });
             }}
-            className="shrink-0 rounded p-0.5 text-zinc-500 opacity-0 hover:bg-zinc-200 group-hover:opacity-100 focus:opacity-100 dark:hover:bg-zinc-700"
+            className="shrink-0 rounded p-0.5 text-fg-subtle opacity-0 hover:bg-surface-active group-hover:opacity-100 focus:opacity-100"
           >
             <DotsIcon width={14} height={14} />
           </button>
@@ -347,9 +348,9 @@ export function FileTree({ projectId, mainFile }: FileTreeProps) {
   const loading = fileIds === undefined || folderIds === undefined;
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-zinc-50 dark:bg-zinc-900/50">
-      <div className="flex h-9 shrink-0 items-center justify-between border-b border-zinc-200 px-2 dark:border-zinc-800">
-        <span className="text-xs text-zinc-500">Proyecto</span>
+    <div className="flex h-full min-h-0 flex-col bg-surface-muted">
+      <div className="flex h-9 shrink-0 items-center justify-between border-b border-line px-2">
+        <span className="text-xs text-fg-subtle">Proyecto</span>
         <div className="flex gap-0.5">
           <IconButton label="Nuevo archivo" onClick={() => startCreate("file")}>
             <FilePlusIcon />
@@ -364,7 +365,7 @@ export function FileTree({ projectId, mainFile }: FileTreeProps) {
       </div>
 
       <div
-        className={`min-h-0 flex-1 overflow-auto py-1 ${dropTarget === "" ? "bg-emerald-50 dark:bg-emerald-950/20" : ""}`}
+        className={`min-h-0 flex-1 overflow-auto py-1 ${dropTarget === "" ? "bg-accent-soft" : ""}`}
         onDragOver={(e) => onDragOver(e, "")}
         onDragLeave={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropTarget(null);
@@ -379,9 +380,9 @@ export function FileTree({ projectId, mainFile }: FileTreeProps) {
         }}
       >
         {loading ? (
-          <p className="px-3 py-2 text-xs text-zinc-500">Cargando…</p>
+          <p className="px-3 py-2 text-xs text-fg-subtle">Cargando…</p>
         ) : tree.children.length === 0 ? (
-          <p className="px-3 py-2 text-xs text-zinc-500">Proyecto vacío. Crea o arrastra archivos aquí.</p>
+          <p className="px-3 py-2 text-xs text-fg-subtle">Proyecto vacío. Crea o arrastra archivos aquí.</p>
         ) : (
           <ul role="tree" aria-label="Archivos del proyecto">
             {tree.children.map((n) => renderNode(n, 0))}
@@ -390,7 +391,7 @@ export function FileTree({ projectId, mainFile }: FileTreeProps) {
       </div>
 
       {error && (
-        <div className="flex items-start gap-2 border-t border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+        <div className="flex items-start gap-2 border-t border-danger-line bg-danger-soft px-3 py-2 text-xs text-danger-text">
           <span className="flex-1">{error}</span>
           <button onClick={() => setError(null)} className="font-medium hover:underline">
             Cerrar
@@ -435,7 +436,7 @@ export function FileTree({ projectId, mainFile }: FileTreeProps) {
               placeholder={creating?.kind === "file" ? "capitulo.tex" : "figuras"}
             />
           </Field>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-danger-text">{error}</p>}
           <div className="flex justify-end gap-2">
             <Button onClick={() => setCreating(null)}>Cancelar</Button>
             <Button type="submit" variant="primary" disabled={!newName.trim()}>
@@ -464,19 +465,5 @@ export function FileTree({ projectId, mainFile }: FileTreeProps) {
         </p>
       </Dialog>
     </div>
-  );
-}
-
-function IconButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      title={label}
-      aria-label={label}
-      onClick={onClick}
-      className="rounded p-1 text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-    >
-      {children}
-    </button>
   );
 }

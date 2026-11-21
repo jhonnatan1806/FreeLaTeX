@@ -1,22 +1,131 @@
 @import "tailwindcss";
 
+/*
+ * Tema: <html data-theme="light|dark"> lo fija el script de layout.tsx antes de pintar
+ * (preferencia guardada o la del sistema). La variante `dark:` sigue ese atributo.
+ */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ── Tokens semánticos ──────────────────────────────────────────────────────
+ * Los componentes usan estos nombres (bg-surface, text-fg-muted, border-line…)
+ * en lugar de colores de Tailwind sueltos, y no necesitan variantes dark:.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  --surface: #ffffff; /* fondo principal, editor, diálogos */
+  --surface-muted: #fafafa; /* paneles laterales y barras */
+  --surface-sunken: #f4f4f5; /* fondo del visor PDF y zonas hundidas */
+  --surface-hover: #f4f4f5;
+  --surface-active: #e4e4e7;
+  --overlay: rgb(0 0 0 / 0.4);
+
+  --line: #e4e4e7; /* bordes y separadores */
+  --line-strong: #d4d4d8; /* bordes de controles */
+
+  --fg: #18181b; /* texto principal */
+  --fg-muted: #52525b; /* texto secundario (contraste ≥ 7:1) */
+  --fg-subtle: #71717a; /* pistas e iconos (≥ 4.5:1 sobre blanco) */
+
+  --accent: #059669;
+  --accent-hover: #047857;
+  --accent-fg: #ffffff;
+  --accent-soft: #d1fae5;
+  --accent-soft-fg: #064e3b;
+  --accent-text: #047857; /* enlaces y texto de acento */
+
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --danger-text: #b91c1c;
+  --danger-soft: #fef2f2;
+  --danger-line: #fecaca;
+
+  --warning: #d97706;
+  --warning-text: #92400e;
+  --warning-soft: #fffbeb;
+  --warning-line: #fde68a;
+
+  --info: #0284c7;
+
+  --focus: #059669;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --surface: #09090b;
+  --surface-muted: #121214;
+  --surface-sunken: #18181b;
+  --surface-hover: #1f1f23;
+  --surface-active: #27272a;
+  --overlay: rgb(0 0 0 / 0.6);
+
+  --line: #27272a;
+  --line-strong: #3f3f46;
+
+  --fg: #f4f4f5;
+  --fg-muted: #a1a1aa;
+  --fg-subtle: #8b8b94;
+
+  --accent: #10b981;
+  --accent-hover: #059669;
+  --accent-fg: #022c22;
+  --accent-soft: rgb(16 185 129 / 0.16);
+  --accent-soft-fg: #a7f3d0;
+  --accent-text: #34d399;
+
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+  --danger-text: #fca5a5;
+  --danger-soft: rgb(239 68 68 / 0.12);
+  --danger-line: rgb(239 68 68 / 0.3);
+
+  --warning: #f59e0b;
+  --warning-text: #fcd34d;
+  --warning-soft: rgb(245 158 11 / 0.12);
+  --warning-line: rgb(245 158 11 / 0.3);
+
+  --info: #38bdf8;
+
+  --focus: #34d399;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-active: var(--surface-active);
+  --color-overlay: var(--overlay);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-soft-fg: var(--accent-soft-fg);
+  --color-accent-text: var(--accent-text);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-text: var(--danger-text);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-line: var(--danger-line);
+  --color-warning: var(--warning);
+  --color-warning-text: var(--warning-text);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-line: var(--warning-line);
+  --color-info: var(--info);
+  --color-focus: var(--focus);
+
+  /* Compatibilidad con el nombre antiguo. */
+  --color-background: var(--surface);
+  --color-foreground: var(--fg);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 /* Colores del editor (CodeMirror) */
@@ -39,25 +148,23 @@
   --cm-invalid: #dc2626;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --cm-bg: #18181b;
-    --cm-fg: #e4e4e7;
-    --cm-caret: #34d399;
-    --cm-gutter-bg: #18181b;
-    --cm-gutter-fg: #52525b;
-    --cm-active-line: #27272a80;
-    --cm-selection: #065f4680;
-    --cm-match: #3f3f46;
-    --cm-search: #854d0e80;
-    --cm-command: #93c5fd;
-    --cm-math: #d8b4fe;
-    --cm-number: #fbbf24;
-    --cm-bracket: #a1a1aa;
-    --cm-comment: #71717a;
-    --cm-argument: #6ee7b7;
-    --cm-invalid: #f87171;
-  }
+[data-theme="dark"] {
+  --cm-bg: #09090b;
+  --cm-fg: #e4e4e7;
+  --cm-caret: #34d399;
+  --cm-gutter-bg: #09090b;
+  --cm-gutter-fg: #52525b;
+  --cm-active-line: #27272a80;
+  --cm-selection: #065f4680;
+  --cm-match: #3f3f46;
+  --cm-search: #854d0e80;
+  --cm-command: #93c5fd;
+  --cm-math: #d8b4fe;
+  --cm-number: #fbbf24;
+  --cm-bracket: #a1a1aa;
+  --cm-comment: #8b8b94;
+  --cm-argument: #6ee7b7;
+  --cm-invalid: #f87171;
 }
 
 /* Resaltado temporal de SyncTeX en el PDF */
@@ -77,8 +184,39 @@
   }
 }
 
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--surface);
+  color: var(--fg);
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Anillo de foco común para todo lo que se maneja con teclado. */
+:where(button, a, [role="button"], [role="tab"], [role="menuitem"], select, summary):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  /* Sin fundido: el resaltado se muestra y desaparece de golpe. */
+  .pdf-sync-highlight {
+    animation-duration: 2.5s !important;
+    animation-timing-function: step-end;
+  }
 }

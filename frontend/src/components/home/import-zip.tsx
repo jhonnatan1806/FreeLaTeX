@@ -82,12 +82,12 @@ export function ImportZip() {
         }}
         className={`flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
           dragging
-            ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
-            : "border-zinc-300 hover:border-zinc-400 dark:border-zinc-700 dark:hover:border-zinc-600"
+            ? "border-accent bg-accent-soft"
+            : "border-line-strong hover:border-fg-subtle"
         }`}
       >
         <span className="font-medium">Subir proyecto (.zip)</span>
-        <span className="text-sm text-zinc-500">Arrastra aquí el ZIP o haz clic para elegirlo. Sirve un ZIP descargado de Overleaf.</span>
+        <span className="text-sm text-fg-subtle">Arrastra aquí el ZIP o haz clic para elegirlo. Sirve un ZIP descargado de Overleaf.</span>
         <input
           ref={inputRef}
           type="file"
@@ -96,7 +96,7 @@ export function ImportZip() {
           onChange={(e) => handleFile(e.target.files?.[0])}
         />
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger-text">{error}</p>}
 
       <Dialog
         open={analysis !== null}
@@ -113,7 +113,7 @@ export function ImportZip() {
       >
         {analysis && (
           <div className="flex flex-col gap-4">
-            <p className="text-zinc-600 dark:text-zinc-400">
+            <p className="text-fg-muted">
               {analysis.entries.length} archivos ({binaryCount} binarios), {formatBytes(totalSize)}.
               {analysis.skipped.length > 0 && ` Se omitieron ${analysis.skipped.length} archivos auxiliares o del sistema.`}
               {analysis.strippedRoot && ` Se quitó la carpeta raíz "${analysis.strippedRoot}".`}
@@ -141,12 +141,12 @@ export function ImportZip() {
               </Select>
             </Field>
             {analysis.candidates.length > 1 && (
-              <p className="text-amber-700 dark:text-amber-400">
+              <p className="text-warning-text">
                 Hay {analysis.candidates.length} archivos con \documentclass. Comprueba que el elegido es el correcto.
               </p>
             )}
             {analysis.candidates.length === 0 && (
-              <p className="text-amber-700 dark:text-amber-400">
+              <p className="text-warning-text">
                 No se encontró ningún .tex con \documentclass. Podrás elegirlo más tarde.
               </p>
             )}

@@ -46,10 +46,10 @@ export function BinaryPreview({ path, data }: BinaryPreviewProps) {
 
   if (mime) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 overflow-auto bg-[repeating-conic-gradient(#e4e4e7_0_25%,transparent_0_50%)] bg-[length:16px_16px] p-6 dark:bg-[repeating-conic-gradient(#27272a_0_25%,transparent_0_50%)]">
+      <div className="flex h-full flex-col items-center justify-center gap-3 overflow-auto bg-[repeating-conic-gradient(var(--surface-active)_0_25%,transparent_0_50%)] bg-[length:16px_16px] p-6">
         {/* eslint-disable-next-line @next/next/no-img-element -- blob local, no optimizable */}
         <img ref={mediaRef} alt={path} className="max-h-[80%] max-w-full object-contain shadow" />
-        <p className="rounded bg-white/80 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-900/80 dark:text-zinc-400">
+        <p className="rounded bg-surface/80 px-2 py-0.5 text-xs text-fg-muted">
           {basename(path)} · {formatBytes(data.byteLength)}
         </p>
       </div>
@@ -57,9 +57,9 @@ export function BinaryPreview({ path, data }: BinaryPreviewProps) {
   }
 
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center text-sm text-zinc-500">
+    <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center text-sm text-fg-subtle">
       <p>
-        <strong className="text-zinc-700 dark:text-zinc-300">{basename(path)}</strong> es un archivo binario (
+        <strong className="text-fg">{basename(path)}</strong> es un archivo binario (
         {formatBytes(data.byteLength)}) y no se puede editar aquí.
       </p>
       <p className="max-w-sm text-xs">
