@@ -11,3 +11,4 @@ coverage/
 Thumbs.db
 .vscode/
 .idea/
+!frontend/src/lib/__fixtures__/*.log
