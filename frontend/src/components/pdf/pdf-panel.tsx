@@ -9,10 +9,10 @@ import { PdfViewer, type ZoomMode } from "./pdf-viewer";
 const ZOOM_STEPS = [0.5, 0.67, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
 
 export function PdfPanel({ projectName }: { projectName: string }) {
-  const { phase, result, pdf, requestError, autoCompile, compile, setAutoCompile } = useCompileStore();
+  const { phase, result, pdf, requestError, autoCompile, compile, setAutoCompile, showLog, setShowLog, highlight, syncToCode } =
+    useCompileStore();
   const [zoom, setZoom] = useState<ZoomMode>("fit-width");
   const [info, setInfo] = useState({ numPages: 0, scale: 1 });
-  const [showLog, setShowLog] = useState(false);
   const onInfo = useCallback((i: { numPages: number; scale: number }) => setInfo(i), []);
 
   const compiling = phase === "compiling";
@@ -46,7 +46,7 @@ export function PdfPanel({ projectName }: { projectName: string }) {
         {logText && (
           <button
             type="button"
-            onClick={() => setShowLog((v) => !v)}
+            onClick={() => setShowLog(!showLog)}
             title={showLog ? "Volver al PDF" : "Errores, avisos y log"}
             className={`inline-flex items-center gap-1 rounded px-2 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 ${showLog ? "bg-zinc-200 dark:bg-zinc-800" : ""}`}
           >
@@ -112,7 +112,13 @@ export function PdfPanel({ projectName }: { projectName: string }) {
         {showLog || (!pdf && failed && !compiling) ? (
           <LogPanel />
         ) : pdf ? (
-          <PdfViewer data={pdf} zoom={zoom} onInfo={onInfo} />
+          <PdfViewer
+            data={pdf}
+            zoom={zoom}
+            onInfo={onInfo}
+            highlight={highlight}
+            onPageDoubleClick={(page, x, y) => void syncToCode(page, x, y)}
+          />
         ) : (
           <div className="flex h-full items-center justify-center p-6 text-center text-sm text-zinc-500">
             {compiling ? "Compilando…" : "Pulsa Recompilar para generar el PDF."}

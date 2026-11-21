@@ -6,7 +6,8 @@ import { db, fileId } from "@/lib/db";
 import { basename } from "@/lib/paths";
 import { useEditorStore } from "@/store/editor-store";
 import { BinaryPreview } from "./binary-preview";
-import { CodeEditor } from "./code-editor";
+import { CodeEditor, syncCursorToPdf } from "./code-editor";
+import { useCompileStore } from "@/store/compile-store";
 
 export function EditorPane({ projectId }: { projectId: string }) {
   const openTabs = useEditorStore((s) => s.openTabs);
@@ -14,6 +15,7 @@ export function EditorPane({ projectId }: { projectId: string }) {
   const setActive = useEditorStore((s) => s.setActive);
   const closeTab = useEditorStore((s) => s.closeTab);
   const revealPath = useEditorStore((s) => s.revealPath);
+  const hasPdf = useCompileStore((s) => s.sync !== null);
 
   // Solo el tipo del archivo activo (y los datos si es binario).
   const active = useLiveQuery(async () => {
@@ -68,6 +70,16 @@ export function EditorPane({ projectId }: { projectId: string }) {
             </div>
           );
         })}
+        {activePath && hasPdf && (
+          <button
+            type="button"
+            onClick={() => syncCursorToPdf()}
+            title="Ver en el PDF la línea del cursor (Ctrl+Alt+J)"
+            className="sticky right-0 ml-auto shrink-0 border-l border-zinc-200 bg-zinc-50 px-3 text-xs text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+          >
+            Ir al PDF →
+          </button>
+        )}
       </div>
 
       <div className="min-h-0 flex-1">

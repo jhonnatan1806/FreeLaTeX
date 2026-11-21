@@ -18,6 +18,9 @@ describe("resolveLogPath", () => {
       "cap/a.tex",
     );
     expect(resolveLogPath("../../fuera.tex", "main.tex")).toBeNull();
+    expect(resolveLogPath("/tmp/freelatex/0b9c1e2a-1111-2222-3333-444455556666/tesis/./main.tex", "tesis/main.tex")).toBe(
+      "tesis/main.tex",
+    );
   });
 });
 

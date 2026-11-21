@@ -81,11 +81,12 @@ export interface SetupOptions {
   path: string;
   onSave: () => void;
   onCompile: () => void;
+  onSyncToPdf: () => void;
   onChange: (state: import("@codemirror/state").EditorState, docChanged: boolean) => void;
 }
 
 /** Extensiones de CodeMirror para un archivo. */
-export function editorExtensions({ path, onSave, onCompile, onChange }: SetupOptions): Extension[] {
+export function editorExtensions({ path, onSave, onCompile, onSyncToPdf, onChange }: SetupOptions): Extension[] {
   const isLatex = LATEX_EXT.has(extname(path));
   return [
     lineNumbers(),
@@ -109,6 +110,7 @@ export function editorExtensions({ path, onSave, onCompile, onChange }: SetupOpt
       { key: "Mod-s", preventDefault: true, run: () => (onSave(), true) },
       // Antes que defaultKeymap, que usa Mod-Enter para insertar una línea.
       { key: "Mod-Enter", preventDefault: true, run: () => (onCompile(), true) },
+      { key: "Mod-Alt-j", preventDefault: true, run: () => (onSyncToPdf(), true) },
       ...closeBracketsKeymap,
       ...defaultKeymap,
       ...searchKeymap,

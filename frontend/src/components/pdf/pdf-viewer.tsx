@@ -2,6 +2,7 @@
 
 import type { PDFDocumentLoadingTask, PDFPageProxy, RenderTask } from "pdfjs-dist";
 import { useEffect, useRef, useState } from "react";
+import type { PdfRect } from "@/lib/synctex";
 
 type PdfJs = typeof import("pdfjs-dist");
 let pdfjsPromise: Promise<PdfJs> | null = null;
@@ -17,10 +18,21 @@ function loadPdfJs(): Promise<PdfJs> {
 
 export type ZoomMode = "fit-width" | number;
 
+export interface PdfHighlight {
+  page: number;
+  rects: PdfRect[];
+  /** Cambia en cada petición para repetir el desplazamiento aunque sea la misma zona. */
+  nonce: number;
+}
+
 interface PdfViewerProps {
   data: Uint8Array;
   zoom: ZoomMode;
   onInfo?: (info: { numPages: number; scale: number }) => void;
+  /** Zona a resaltar y mostrar (código → PDF). */
+  highlight?: PdfHighlight | null;
+  /** Doble clic en una página, en puntos PDF desde arriba a la izquierda (PDF → código). */
+  onPageDoubleClick?: (page: number, x: number, y: number) => void;
 }
 
 interface PageInfo {
@@ -32,7 +44,7 @@ interface PageInfo {
 const PAGE_GAP = 12;
 const PADDING = 16;
 
-export function PdfViewer({ data, zoom, onInfo }: PdfViewerProps) {
+export function PdfViewer({ data, zoom, onInfo, highlight, onPageDoubleClick }: PdfViewerProps) {
   // Estado (no ref) porque las páginas lo usan como raíz del IntersectionObserver.
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const [pages, setPages] = useState<PageInfo[]>([]);
@@ -85,6 +97,21 @@ export function PdfViewer({ data, zoom, onInfo }: PdfViewerProps) {
     onInfo?.({ numPages: pages.length, scale });
   }, [onInfo, pages.length, scale]);
 
+  // Desplazar hasta la zona resaltada (una vez por petición).
+  const scrolledNonce = useRef(0);
+  useEffect(() => {
+    if (!container || !highlight || highlight.nonce === scrolledNonce.current || pages.length === 0) return;
+    const pageEl = container.querySelector<HTMLElement>(`[data-page="${highlight.page}"]`);
+    if (!pageEl) return;
+    scrolledNonce.current = highlight.nonce;
+    const firstY = Math.min(...highlight.rects.map((r) => r.y));
+    const offset = pageEl.getBoundingClientRect().top - container.getBoundingClientRect().top;
+    container.scrollTo({
+      top: container.scrollTop + offset + firstY * scale - container.clientHeight / 3,
+      behavior: "smooth",
+    });
+  }, [container, highlight, pages.length, scale]);
+
   return (
     <div
       ref={(el) => {
@@ -97,7 +124,15 @@ export function PdfViewer({ data, zoom, onInfo }: PdfViewerProps) {
       <div className="flex flex-col items-center" style={{ padding: PADDING, gap: PAGE_GAP }}>
         {containerWidth > 0 &&
           pages.map((info, i) => (
-            <PdfPage key={i} info={info} scale={scale} root={container} label={`Página ${i + 1}`} />
+            <PdfPage
+              key={i}
+              number={i + 1}
+              info={info}
+              scale={scale}
+              root={container}
+              highlight={highlight?.page === i + 1 ? highlight : null}
+              onDoubleClick={onPageDoubleClick}
+            />
           ))}
       </div>
     </div>
@@ -105,14 +140,16 @@ export function PdfViewer({ data, zoom, onInfo }: PdfViewerProps) {
 }
 
 interface PdfPageProps {
+  number: number;
   info: PageInfo;
   scale: number;
   root: HTMLElement | null;
-  label: string;
+  highlight: PdfHighlight | null;
+  onDoubleClick?: (page: number, x: number, y: number) => void;
 }
 
 /** Una página: se renderiza solo cuando está cerca de la zona visible. */
-function PdfPage({ info, scale, root, label }: PdfPageProps) {
+function PdfPage({ number, info, scale, root, highlight, onDoubleClick }: PdfPageProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [visible, setVisible] = useState(false);
   const width = Math.floor(info.width * scale);
@@ -160,11 +197,27 @@ function PdfPage({ info, scale, root, label }: PdfPageProps) {
   }, [visible, info, scale]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      aria-label={label}
+    <div
+      data-page={number}
+      className="relative shrink-0 bg-white shadow-md"
       style={{ width, height }}
-      className="shrink-0 bg-white shadow-md"
-    />
+      onDoubleClick={(e) => {
+        if (!onDoubleClick) return;
+        const box = e.currentTarget.getBoundingClientRect();
+        onDoubleClick(number, (e.clientX - box.left) / scale, (e.clientY - box.top) / scale);
+      }}
+      title={onDoubleClick ? "Doble clic para ir al código" : undefined}
+    >
+      <canvas ref={canvasRef} aria-label={`Página ${number}`} style={{ width, height }} className="block" />
+      {highlight &&
+        highlight.rects.map((r, i) => (
+          <div
+            // La clave con el nonce reinicia la animación en cada petición.
+            key={`${highlight.nonce}-${i}`}
+            className="pdf-sync-highlight pointer-events-none absolute rounded-sm"
+            style={{ left: r.x * scale - 2, top: r.y * scale - 2, width: r.width * scale + 4, height: r.height * scale + 4 }}
+          />
+        ))}
+    </div>
   );
 }

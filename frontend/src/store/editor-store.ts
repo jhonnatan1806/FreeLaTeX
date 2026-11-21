@@ -28,6 +28,9 @@ interface EditorStore {
 
   /** Estado de CodeMirror por archivo (conserva deshacer/cursor al cambiar de pestaña). */
   docStates: Map<string, EditorState>;
+  /** Archivo y línea del cursor en el editor activo. Lo registra el editor. */
+  getCursor: () => { path: string; line: number } | null;
+  setGetCursor: (fn: () => { path: string; line: number } | null) => void;
   /** Guarda inmediatamente los cambios pendientes del editor. Lo registra el editor. */
   flushSaves: () => Promise<void>;
 
@@ -89,6 +92,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   jump: null,
   docStates: new Map(),
   flushSaves: async () => {},
+  getCursor: () => null,
+  setGetCursor: (getCursor) => set({ getCursor }),
 
   init: (projectId, defaultOpen) => {
     if (get().projectId === projectId) return;

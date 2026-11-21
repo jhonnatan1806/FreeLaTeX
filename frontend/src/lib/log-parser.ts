@@ -24,15 +24,8 @@ export interface ParseOptions {
 /** Rutas absolutas del workspace del compilador: /tmp/freelatex/<uuid>/... */
 const WORKSPACE_PATH = /\/freelatex\/[0-9a-f-]{36}\/(.+)$/;
 
-/** Convierte una ruta del log en ruta del proyecto. */
-export function resolveLogPath(raw: string, mainFile: string): string | null {
-  const clean = raw.replace(/^"|"$/g, "");
-  if (clean.startsWith("/")) {
-    const m = WORKSPACE_PATH.exec(clean);
-    return m ? m[1] : null; // archivo del sistema (TeX Live)
-  }
-  const relative = clean.replace(/^(\.\/)+/, "");
-  const parts = [...(dirname(mainFile) ? dirname(mainFile).split("/") : []), ...relative.split("/")];
+/** Resuelve "." y ".." en una lista de segmentos; null si se sale del proyecto. */
+function normalizeSegments(parts: string[]): string | null {
   const out: string[] = [];
   for (const part of parts) {
     if (part === "" || part === ".") continue;
@@ -42,6 +35,18 @@ export function resolveLogPath(raw: string, mainFile: string): string | null {
     } else out.push(part);
   }
   return out.join("/") || null;
+}
+
+/** Convierte una ruta del log (o de SyncTeX) en ruta del proyecto. */
+export function resolveLogPath(raw: string, mainFile: string): string | null {
+  const clean = raw.replace(/^"|"$/g, "");
+  if (clean.startsWith("/")) {
+    // Absoluta: dentro del workspace es relativa a la raíz del proyecto; si no, es de TeX Live.
+    const m = WORKSPACE_PATH.exec(clean);
+    return m ? normalizeSegments(m[1].split("/")) : null;
+  }
+  const base = dirname(mainFile) ? dirname(mainFile).split("/") : [];
+  return normalizeSegments([...base, ...clean.split("/")]);
 }
 
 const FILE_LINE_ERROR = /^((?:\.{0,2}\/)?[^\s:()]+\.[A-Za-z0-9]+):(\d+): (.*)$/;

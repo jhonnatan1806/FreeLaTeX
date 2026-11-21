@@ -10,6 +10,12 @@ import { useEditorStore } from "@/store/editor-store";
 import { editorExtensions } from "./codemirror-setup";
 import { applyDiagnostics, jumpToLine } from "./diagnostics";
 
+/** Muestra en el PDF la línea del cursor (SyncTeX). */
+export function syncCursorToPdf() {
+  const cursor = useEditorStore.getState().getCursor();
+  if (cursor) useCompileStore.getState().syncToPdf(cursor.path, cursor.line);
+}
+
 /** Espera tras la última pulsación antes de guardar en IndexedDB. */
 const AUTOSAVE_MS = 700;
 
@@ -66,6 +72,12 @@ export function CodeEditor({ projectId, path }: CodeEditorProps) {
     const view = new EditorView({ parent: hostRef.current!, state: EditorState.create() });
     viewRef.current = view;
     useEditorStore.getState().setFlushSaves(flush);
+    useEditorStore.getState().setGetCursor(() => {
+      const p = currentPath.current;
+      if (!p || !viewRef.current) return null;
+      const state = viewRef.current.state;
+      return { path: p, line: state.doc.lineAt(state.selection.main.head).number };
+    });
 
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
       if (pending.size > 0) {
@@ -79,6 +91,7 @@ export function CodeEditor({ projectId, path }: CodeEditorProps) {
       window.removeEventListener("beforeunload", onBeforeUnload);
       void flush();
       useEditorStore.getState().setFlushSaves(async () => {});
+      useEditorStore.getState().setGetCursor(() => null);
       view.destroy();
       viewRef.current = null;
       currentPath.current = null;
@@ -122,6 +135,7 @@ export function CodeEditor({ projectId, path }: CodeEditorProps) {
           // Como en Overleaf: Ctrl+S guarda y recompila.
           onSave: () => void useCompileStore.getState().compile(),
           onCompile: () => void useCompileStore.getState().compile(),
+          onSyncToPdf: () => syncCursorToPdf(),
           onChange: (next, docChanged) => {
             // La ruta puede haber cambiado (renombrado): usar siempre la del ref.
             const p = currentPath.current;

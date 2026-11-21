@@ -40,6 +40,7 @@ const outDir = join("smoke-output", basename(dir));
 mkdirSync(outDir, { recursive: true });
 if (body.pdf) writeFileSync(join(outDir, "output.pdf"), Buffer.from(body.pdf, "base64"));
 if (body.log) writeFileSync(join(outDir, "output.log"), body.log);
+if (body.synctex) writeFileSync(join(outDir, "output.synctex.gz"), Buffer.from(body.synctex, "base64"));
 
 const errors = (body.log ?? "").split("\n").filter((l) => /^(\S+:\d+:|! )/.test(l));
 console.log(
