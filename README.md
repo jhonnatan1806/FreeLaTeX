@@ -46,5 +46,13 @@ curl -F project=@ejemplo.zip -F mainFile=main.tex -F engine=pdflatex http://loca
 
 - [x] Fase 0: estructura del repositorio
 - [x] Fase 1: compilador en Docker (`POST /compile`)
-- [ ] Fase 2: proyectos locales en IndexedDB
-- [ ] Fase 3: importar y exportar ZIP
+- [x] Fase 2: proyectos locales en IndexedDB
+- [x] Fase 3: importar y exportar ZIP
+- [ ] Fase 4: editor y árbol de archivos
+
+## Tests
+
+```bash
+cd frontend
+npm test
+```
