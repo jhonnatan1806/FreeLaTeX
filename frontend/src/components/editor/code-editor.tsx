@@ -8,6 +8,7 @@ import { saveFileText } from "@/lib/file-ops";
 import { useCompileStore } from "@/store/compile-store";
 import { useEditorStore } from "@/store/editor-store";
 import { editorExtensions } from "./codemirror-setup";
+import { applyDiagnostics, jumpToLine } from "./diagnostics";
 
 /** Espera tras la última pulsación antes de guardar en IndexedDB. */
 const AUTOSAVE_MS = 700;
@@ -25,6 +26,7 @@ export function CodeEditor({ projectId, path }: CodeEditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const currentPath = useRef<string | null>(null);
+  const appliedJump = useRef(0);
   const scheduleSave = useRef<(path: string, text: string) => void>(() => {});
   const reloadToken = useEditorStore((s) => s.reloadToken);
 
@@ -89,11 +91,23 @@ export function CodeEditor({ projectId, path }: CodeEditorProps) {
     if (!view) return;
     const { docStates } = useEditorStore.getState();
 
+    /** Tras mostrar un documento: marcas del último log y salto pendiente. */
+    const afterShow = (v: EditorView) => {
+      currentPath.current = path;
+      applyDiagnostics(v, useCompileStore.getState().entries, path);
+      const { jump } = useEditorStore.getState();
+      if (jump && jump.path === path && jump.nonce !== appliedJump.current) {
+        appliedJump.current = jump.nonce;
+        jumpToLine(v, jump.line);
+      } else {
+        v.focus();
+      }
+    };
+
     const cached = docStates.get(path);
     if (cached) {
       if (cached !== view.state) view.setState(cached);
-      currentPath.current = path;
-      view.focus();
+      afterShow(view);
       return;
     }
 
@@ -119,14 +133,29 @@ export function CodeEditor({ projectId, path }: CodeEditorProps) {
       });
       docStates.set(path, state);
       v.setState(state);
-      currentPath.current = path;
-      v.focus();
+      afterShow(v);
     });
 
     return () => {
       cancelled = true;
     };
   }, [projectId, path, reloadToken]);
+
+  // Nuevas marcas al terminar una compilación.
+  const entries = useCompileStore((s) => s.entries);
+  useEffect(() => {
+    const view = viewRef.current;
+    if (view && currentPath.current) applyDiagnostics(view, entries, currentPath.current);
+  }, [entries]);
+
+  // Saltos pedidos para el archivo que ya está abierto.
+  const jump = useEditorStore((s) => s.jump);
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view || !jump || jump.path !== currentPath.current || jump.nonce === appliedJump.current) return;
+    appliedJump.current = jump.nonce;
+    jumpToLine(view, jump.line);
+  }, [jump]);
 
   return <div ref={hostRef} className="h-full min-h-0 overflow-hidden" />;
 }

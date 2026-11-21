@@ -10,6 +10,7 @@ import {
   syntaxHighlighting,
 } from "@codemirror/language";
 import { stex } from "@codemirror/legacy-modes/mode/stex";
+import { lintGutter } from "@codemirror/lint";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
 import type { Extension } from "@codemirror/state";
 import {
@@ -71,6 +72,8 @@ const theme = EditorView.theme({
   ".cm-matchingBracket": { backgroundColor: "var(--cm-match)", outline: "none" },
   ".cm-searchMatch": { backgroundColor: "var(--cm-search)" },
   ".cm-panels": { backgroundColor: "var(--cm-gutter-bg)", color: "var(--cm-fg)" },
+  ".cm-diagnostic": { fontFamily: "var(--font-sans), system-ui, sans-serif", fontSize: "13px" },
+  ".cm-lintRange-error": { backgroundImage: "none", textDecoration: "underline wavy var(--cm-invalid)", textUnderlineOffset: "3px" },
   ".cm-tooltip": { backgroundColor: "var(--cm-bg)", border: "1px solid var(--cm-gutter-fg)" },
 });
 
@@ -86,6 +89,7 @@ export function editorExtensions({ path, onSave, onCompile, onChange }: SetupOpt
   const isLatex = LATEX_EXT.has(extname(path));
   return [
     lineNumbers(),
+    lintGutter(),
     highlightActiveLineGutter(),
     highlightSpecialChars(),
     history(),

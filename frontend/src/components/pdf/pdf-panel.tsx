@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { downloadBytes } from "@/lib/projects";
 import { useCompileStore } from "@/store/compile-store";
+import { LogBadges, LogPanel } from "./log-panel";
 import { PdfViewer, type ZoomMode } from "./pdf-viewer";
 
 const ZOOM_STEPS = [0.5, 0.67, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
@@ -28,7 +29,7 @@ export function PdfPanel({ projectName }: { projectName: string }) {
   return (
     <div className="flex h-full min-h-0 flex-col bg-zinc-100 dark:bg-zinc-900">
       {/* Barra de compilación */}
-      <div className="flex h-9 shrink-0 items-center gap-2 border-b border-zinc-200 px-2 text-xs dark:border-zinc-800">
+      <div className="flex h-9 shrink-0 items-center gap-2 overflow-x-auto whitespace-nowrap border-b border-zinc-200 px-2 text-xs dark:border-zinc-800">
         <button
           type="button"
           onClick={() => void compile()}
@@ -42,7 +43,17 @@ export function PdfPanel({ projectName }: { projectName: string }) {
           <input type="checkbox" checked={autoCompile} onChange={(e) => setAutoCompile(e.target.checked)} />
           Auto
         </label>
-
+        {logText && (
+          <button
+            type="button"
+            onClick={() => setShowLog((v) => !v)}
+            title={showLog ? "Volver al PDF" : "Errores, avisos y log"}
+            className={`inline-flex items-center gap-1 rounded px-2 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 ${showLog ? "bg-zinc-200 dark:bg-zinc-800" : ""}`}
+          >
+            {showLog ? "PDF" : "Log"}
+            <LogBadges />
+          </button>
+        )}
         <StatusText />
 
         <div className="ml-auto flex items-center gap-1">
@@ -67,15 +78,6 @@ export function PdfPanel({ projectName }: { projectName: string }) {
               </ToolbarButton>
             </>
           )}
-          {logText && (
-            <button
-              type="button"
-              onClick={() => setShowLog((v) => !v)}
-              className={`rounded px-2 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 ${showLog ? "bg-zinc-200 dark:bg-zinc-800" : ""} ${failed ? "text-red-600 dark:text-red-400" : ""}`}
-            >
-              Log
-            </button>
-          )}
         </div>
       </div>
 
@@ -96,9 +98,9 @@ export function PdfPanel({ projectName }: { projectName: string }) {
                   ? "La compilación falló. Se muestra el PDF anterior."
                   : "La compilación falló y no se generó PDF."}
           </span>
-          {!showLog && logText && (
+          {!showLog && logText && pdf && (
             <button type="button" onClick={() => setShowLog(true)} className="font-medium underline">
-              Ver log
+              Ver errores
             </button>
           )}
         </div>
@@ -106,10 +108,9 @@ export function PdfPanel({ projectName }: { projectName: string }) {
 
       {/* Contenido */}
       <div className="relative min-h-0 flex-1">
-        {showLog ? (
-          <pre className="h-full overflow-auto whitespace-pre-wrap break-words bg-white p-3 font-mono text-xs text-zinc-800 dark:bg-zinc-950 dark:text-zinc-200">
-            {logText}
-          </pre>
+        {/* Sin PDF que mostrar tras un fallo: directamente los errores. */}
+        {showLog || (!pdf && failed && !compiling) ? (
+          <LogPanel />
         ) : pdf ? (
           <PdfViewer data={pdf} zoom={zoom} onInfo={onInfo} />
         ) : (

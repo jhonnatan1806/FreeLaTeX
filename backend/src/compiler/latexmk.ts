@@ -34,6 +34,20 @@ export interface CompileOptions {
   timeoutMs: number;
 }
 
+const utf8 = new TextDecoder("utf-8", { fatal: true });
+
+/**
+ * El .log de TeX copia los bytes de la entrada tal cual. Casi siempre es UTF-8;
+ * si no lo es (proyecto en latin1), latin1 nunca falla.
+ */
+export function decodeLog(buf: Buffer): string {
+  try {
+    return utf8.decode(buf);
+  } catch {
+    return buf.toString("latin1");
+  }
+}
+
 async function readIfExists(path: string): Promise<Buffer | null> {
   try {
     return await readFile(path);
@@ -114,8 +128,7 @@ export async function runLatexmk(opts: CompileOptions): Promise<CompileResult> {
     status,
     exitCode,
     pdf,
-    // Los .log de TeX son bytes en la codificación de la entrada; latin1 nunca falla.
-    log: logBuf ? logBuf.toString("latin1") : null,
+    log: logBuf ? decodeLog(logBuf) : null,
     synctex,
     output: output.slice(0, MAX_OUTPUT_CHARS),
     durationMs: Date.now() - started,

@@ -23,6 +23,9 @@ interface EditorStore {
   /** Se incrementa cuando el contenido de archivos abiertos cambia desde fuera del editor. */
   reloadToken: number;
 
+  /** Petición de ir a una línea (desde el panel de errores). `nonce` permite repetirla. */
+  jump: { path: string; line: number | null; nonce: number } | null;
+
   /** Estado de CodeMirror por archivo (conserva deshacer/cursor al cambiar de pestaña). */
   docStates: Map<string, EditorState>;
   /** Guarda inmediatamente los cambios pendientes del editor. Lo registra el editor. */
@@ -30,6 +33,8 @@ interface EditorStore {
 
   init: (projectId: string, defaultOpen: string | null) => void;
   openFile: (path: string) => void;
+  /** Abre el archivo, lo muestra en el árbol y coloca el cursor en la línea. */
+  goTo: (path: string, line: number | null) => void;
   closeTab: (path: string) => void;
   setActive: (path: string) => void;
   select: (path: string | null) => void;
@@ -81,6 +86,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   expanded: new Set(),
   saveStatus: "saved",
   reloadToken: 0,
+  jump: null,
   docStates: new Map(),
   flushSaves: async () => {},
 
@@ -108,6 +114,12 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       activePath: path,
       selected: path,
     });
+  },
+
+  goTo: (path, line) => {
+    get().openFile(path);
+    get().revealPath(path);
+    set({ jump: { path, line, nonce: (get().jump?.nonce ?? 0) + 1 } });
   },
 
   closeTab: (path) => {

@@ -32,6 +32,7 @@ import { basename, dirname, extname, isValidName } from "@/lib/paths";
 import { downloadBytes, updateProjectSettings } from "@/lib/projects";
 import { buildTree, isWithin, joinPath, type TreeNode } from "@/lib/tree";
 import { fileBytes } from "@/lib/zip";
+import { useCompileStore } from "@/store/compile-store";
 import { useEditorStore } from "@/store/editor-store";
 
 const IMAGE_EXT = new Set([".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".svg", ".eps", ".pdf", ".tif", ".tiff"]);
@@ -56,6 +57,11 @@ export function FileTree({ projectId, mainFile }: FileTreeProps) {
   }, [fileIds, folderIds, projectId]);
 
   const store = useEditorStore();
+  const entries = useCompileStore((s) => s.entries);
+  const errorFiles = useMemo(
+    () => entries.filter((e) => e.level === "error" && e.file).map((e) => e.file!),
+    [entries],
+  );
   const { expanded, selected, activePath } = store;
 
   const [renaming, setRenaming] = useState<string | null>(null);
@@ -307,6 +313,9 @@ export function FileTree({ projectId, mainFile }: FileTreeProps) {
             <span className="min-w-0 flex-1 truncate">{node.name}</span>
           )}
 
+          {errorFiles.some((f) => (isFolder ? isWithin(f, node.path) : f === node.path)) && (
+            <span className="h-2 w-2 shrink-0 rounded-full bg-red-500" title="Tiene errores de compilación" />
+          )}
           {isMain && (
             <StarIcon width={13} height={13} className="shrink-0 fill-amber-400 text-amber-500" aria-label="Archivo principal" />
           )}

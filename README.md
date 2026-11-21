@@ -94,7 +94,7 @@ npm run dev
 | Abrir un archivo | Clic en el árbol de la izquierda (se abre en una pestaña) |
 | Guardar | Automático al dejar de escribir |
 | Compilar | Botón **Recompilar**, `Ctrl + Enter` o `Ctrl + S` (guarda y compila). Marca **Auto** para compilar cada vez que se guarda |
-| Ver el log | Botón **Log** en la barra del PDF |
+| Ver errores y avisos | Botón **Log** en la barra del PDF (muestra cuántos errores y avisos hay). Clic en `archivo, línea N` para saltar a esa línea. Los errores también se marcan en el margen del editor y con un punto rojo en el árbol |
 | Buscar / reemplazar | `Ctrl + F` dentro del editor |
 | Crear archivo o carpeta | Iconos de la barra del árbol, o clic derecho sobre una carpeta |
 | Renombrar | `F2` sobre el elemento del árbol, o clic derecho → Renombrar |
@@ -155,6 +155,6 @@ curl -F project=@ejemplo.zip -F mainFile=main.tex -F engine=pdflatex http://loca
 - [x] Fase 3: importar y exportar ZIP
 - [x] Fase 4: editor y árbol de archivos
 - [x] Fase 5: compilar y ver el PDF
-- [ ] Fase 6: mapeo de errores
+- [x] Fase 6: mapeo de errores
 - [ ] Fase 7: SyncTeX y autocompletado
 - [ ] Fase 8: producción

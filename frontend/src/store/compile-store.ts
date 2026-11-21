@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { compileProject } from "@/lib/compile-client";
 import { db } from "@/lib/db";
+import { parseLatexLog, type LogEntry } from "@/lib/log-parser";
 import type { CompileResult } from "@/types/project";
 import { useEditorStore } from "./editor-store";
 
@@ -15,6 +16,8 @@ interface CompileStore {
   result: CompileResult | null;
   /** Último PDF generado: se sigue mostrando aunque la siguiente compilación falle. */
   pdf: Uint8Array | null;
+  /** Errores, avisos y problemas de maquetación extraídos del log. */
+  entries: LogEntry[];
   /** Error al contactar con el compilador o preparar el envío. */
   requestError: string | null;
   /** Compilar automáticamente tras guardar. */
@@ -37,22 +40,41 @@ function readAuto(): boolean {
   }
 }
 
+/** Analiza el log asociando las rutas solo a archivos que existen en el proyecto. */
+async function analyze(projectId: string, result: CompileResult): Promise<LogEntry[]> {
+  const ids = await db.files.where("projectId").equals(projectId).primaryKeys();
+  const projectFiles = new Set(ids.map((id) => id.slice(projectId.length + 1)));
+  return parseLatexLog(result.log ?? "", { mainFile: result.mainFile, projectFiles }, result.output);
+}
+
 export const useCompileStore = create<CompileStore>((set, get) => ({
   projectId: null,
   phase: "idle",
   result: null,
   pdf: null,
+  entries: [],
   requestError: null,
   autoCompile: false,
   queued: false,
 
   init: async (projectId) => {
     if (get().projectId === projectId) return;
-    set({ projectId, phase: "idle", result: null, pdf: null, requestError: null, queued: false, autoCompile: readAuto() });
+    set({
+      projectId,
+      phase: "idle",
+      result: null,
+      pdf: null,
+      entries: [],
+      requestError: null,
+      queued: false,
+      autoCompile: readAuto(),
+    });
     const cached = await db.outputs.get(projectId);
     if (get().projectId !== projectId) return; // cambió de proyecto mientras tanto
     if (cached) {
-      set({ result: cached, pdf: cached.pdf, phase: "done" });
+      const entries = await analyze(projectId, cached);
+      if (get().projectId !== projectId) return;
+      set({ result: cached, pdf: cached.pdf, phase: "done", entries });
     } else {
       // Primera vez que se abre: compilar para mostrar el PDF (como Overleaf).
       const project = await db.projects.get(projectId);
@@ -73,8 +95,9 @@ export const useCompileStore = create<CompileStore>((set, get) => ({
     try {
       await useEditorStore.getState().flushSaves();
       const result = await compileProject(projectId);
+      const entries = await analyze(projectId, result);
       if (get().projectId !== projectId) return;
-      set({ phase: "done", result, pdf: result.pdf ?? get().pdf });
+      set({ phase: "done", result, pdf: result.pdf ?? get().pdf, entries });
       await db.outputs.put({ ...result, pdf: result.pdf ?? get().pdf, projectId });
     } catch (err) {
       if (get().projectId !== projectId) return;
