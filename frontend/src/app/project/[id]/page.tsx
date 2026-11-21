@@ -2,11 +2,11 @@
 
 import { Suspense } from "react";
 import { useParams } from "next/navigation";
-import { ProjectOverview } from "@/components/project/project-overview";
+import { EditorLayout } from "@/components/editor/editor-layout";
 
 function ProjectFromUrl() {
   const { id } = useParams<{ id: string }>();
-  return <ProjectOverview projectId={id} />;
+  return <EditorLayout projectId={id} />;
 }
 
 // Página cliente: los datos del proyecto viven en IndexedDB, no en el servidor.

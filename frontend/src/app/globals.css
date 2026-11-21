@@ -19,6 +19,47 @@
   }
 }
 
+/* Colores del editor (CodeMirror) */
+:root {
+  --cm-bg: #ffffff;
+  --cm-fg: #1f2328;
+  --cm-caret: #059669;
+  --cm-gutter-bg: #fafafa;
+  --cm-gutter-fg: #a1a1aa;
+  --cm-active-line: #f4f4f580;
+  --cm-selection: #a7f3d080;
+  --cm-match: #fde68a;
+  --cm-search: #fef08a;
+  --cm-command: #1d4ed8;
+  --cm-math: #9333ea;
+  --cm-number: #b45309;
+  --cm-bracket: #52525b;
+  --cm-comment: #6b7280;
+  --cm-argument: #047857;
+  --cm-invalid: #dc2626;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --cm-bg: #18181b;
+    --cm-fg: #e4e4e7;
+    --cm-caret: #34d399;
+    --cm-gutter-bg: #18181b;
+    --cm-gutter-fg: #52525b;
+    --cm-active-line: #27272a80;
+    --cm-selection: #065f4680;
+    --cm-match: #3f3f46;
+    --cm-search: #854d0e80;
+    --cm-command: #93c5fd;
+    --cm-math: #d8b4fe;
+    --cm-number: #fbbf24;
+    --cm-bracket: #a1a1aa;
+    --cm-comment: #71717a;
+    --cm-argument: #6ee7b7;
+    --cm-invalid: #f87171;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

@@ -87,6 +87,21 @@ npm run dev
 
 ---
 
+## Uso del editor
+
+| Acción | Cómo |
+|---|---|
+| Abrir un archivo | Clic en el árbol de la izquierda (se abre en una pestaña) |
+| Guardar | Automático al dejar de escribir; `Ctrl + S` fuerza el guardado |
+| Buscar / reemplazar | `Ctrl + F` dentro del editor |
+| Crear archivo o carpeta | Iconos de la barra del árbol, o clic derecho sobre una carpeta |
+| Renombrar | `F2` sobre el elemento del árbol, o clic derecho → Renombrar |
+| Mover | Arrastra el archivo o carpeta sobre otra carpeta (o al espacio vacío para la raíz) |
+| Subir archivos o carpetas | Arrastra desde tu explorador al árbol, o el icono de subir |
+| Archivo principal | Selector "Principal" arriba, o clic derecho sobre un `.tex` |
+
+---
+
 ## Comandos útiles
 
 Todos se ejecutan desde la raíz del repositorio.
@@ -125,6 +140,7 @@ curl -F project=@ejemplo.zip -F mainFile=main.tex -F engine=pdflatex http://loca
 | `port is already allocated` (4000) o `Port 3000 is in use` | Otro programa usa el puerto. Ciérralo, o cambia el puerto en `docker/docker-compose.yml` (y `NEXT_PUBLIC_COMPILER_URL` en `frontend/.env.local`). |
 | Error de CORS en la consola del navegador | El compilador solo acepta peticiones desde `http://localhost:3000`. Si usas otro origen, cambia `CORS_ORIGIN` en `docker/docker-compose.yml`. |
 | Cambié código en `backend/` y no se nota | El backend corre dentro de la imagen: vuelve a ejecutar `npm run compiler:up` para reconstruirla. |
+| Un cambio en el código de la web no se refleja | Recarga la página. Si sigue igual (pasa a veces con `globals.css`), detén `npm run dev` con `Ctrl + C` y vuelve a lanzarlo. |
 | Mis proyectos no aparecen | Se guardan en el navegador (IndexedDB). Otro navegador, una ventana privada o borrar los datos del sitio no los muestran. Descarga el ZIP para guardar una copia. |
 
 ---
@@ -135,7 +151,7 @@ curl -F project=@ejemplo.zip -F mainFile=main.tex -F engine=pdflatex http://loca
 - [x] Fase 1: compilador en Docker (`POST /compile`)
 - [x] Fase 2: proyectos locales en IndexedDB
 - [x] Fase 3: importar y exportar ZIP
-- [ ] Fase 4: editor y árbol de archivos
+- [x] Fase 4: editor y árbol de archivos
 - [ ] Fase 5: compilar y ver el PDF
 - [ ] Fase 6: mapeo de errores
 - [ ] Fase 7: SyncTeX y autocompletado
