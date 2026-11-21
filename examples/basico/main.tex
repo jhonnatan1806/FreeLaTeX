@@ -1,0 +1,23 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath}
+\usepackage[backend=biber,style=numeric]{biblatex}
+\addbibresource{referencias.bib}
+
+\title{Proyecto de ejemplo}
+\author{FreeLaTeX}
+
+\begin{document}
+\maketitle
+
+\input{capitulos/introduccion}
+
+Una ecuación conocida:
+\begin{equation}
+  E = mc^2 \label{eq:einstein}
+\end{equation}
+Ver la ecuación~\eqref{eq:einstein} y \cite{knuth1984}.
+
+\printbibliography
+\end{document}

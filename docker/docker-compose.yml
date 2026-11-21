@@ -1,0 +1,27 @@
+name: freelatex
+
+services:
+  compiler:
+    build:
+      context: ../backend
+      dockerfile: ../docker/compiler.Dockerfile
+    image: freelatex-compiler:dev
+    ports:
+      - "4000:4000"
+    environment:
+      CORS_ORIGIN: "http://localhost:3000"
+      COMPILE_TIMEOUT_SECONDS: "60"
+      MAX_CONCURRENT_COMPILES: "2"
+      MAX_UPLOAD_MB: "50"
+    # Aislamiento y límites de recursos.
+    user: node
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    mem_limit: 2g
+    cpus: 2
+    tmpfs:
+      - /tmp:size=1g,uid=1000,gid=1000,mode=0700
+    restart: unless-stopped

@@ -189,6 +189,7 @@ En desarrollo diario:
 
 ## 7. Decisiones abiertas
 
-- **Paquete TeX Live:** empezar con `scheme-medium` + `collection-latexextra`, `collection-fontsrecommended`, `collection-langspanish` y `biber`. Si faltan paquetes, pasar a `scheme-full` (~5 GB).
+- **Paquete TeX Live:** se usa TeX Live 2024 de Debian trixie (paquetes `texlive-latex-extra`, `-science`, `-pictures`, `-lang-spanish`, `biber`, etc.). La imagen pesa ~1,9 GB. Si faltan paquetes, añadir más `texlive-*` o pasar a la imagen oficial `texlive/texlive` (~5 GB).
+- **Lectura de archivos fuera del proyecto:** TeX Live permite por defecto `\input{/ruta/absoluta}`. Dentro del contenedor no hay nada sensible, pero en la fase 8 conviene valorar `openin_any=p`.
 - **Autocompilar:** ¿solo manual con Ctrl+S, o también automático con debounce? (Se decide en la fase 5.)
 - **Límite de proyectos locales:** IndexedDB suele permitir cientos de MB; avisar al usuario si se acerca al límite.
