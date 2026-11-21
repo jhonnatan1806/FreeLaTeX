@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { compileProject } from "@/lib/compile-client";
 import { db } from "@/lib/db";
 import { parseLatexLog, type LogEntry } from "@/lib/log-parser";
-import { forwardSearch, parseSynctex, reverseSearch, type SyncData } from "@/lib/synctex";
+import { synctexClient } from "@/lib/synctex-client";
 import type { PdfHighlight } from "@/components/pdf/pdf-viewer";
 import type { CompileResult } from "@/types/project";
 import { useEditorStore } from "./editor-store";
@@ -20,8 +20,8 @@ interface CompileStore {
   pdf: Uint8Array | null;
   /** Errores, avisos y problemas de maquetación extraídos del log. */
   entries: LogEntry[];
-  /** Datos SyncTeX del PDF mostrado (para saltar entre código y PDF). */
-  sync: SyncData | null;
+  /** Hay datos SyncTeX del PDF mostrado (se analizan en un Web Worker). */
+  syncReady: boolean;
   /** Zona del PDF a resaltar tras un salto desde el código. */
   highlight: PdfHighlight | null;
   /** Mostrar el panel de errores en lugar del PDF. */
@@ -38,9 +38,9 @@ interface CompileStore {
   setAutoCompile: (on: boolean) => void;
   setShowLog: (show: boolean) => void;
   /** Código → PDF. Devuelve false si no hay datos para esa línea. */
-  syncToPdf: (file: string, line: number) => boolean;
+  syncToPdf: (file: string, line: number) => Promise<boolean>;
   /** PDF → código: abre el archivo en la línea correspondiente. */
-  syncToCode: (page: number, x: number, y: number) => boolean;
+  syncToCode: (page: number, x: number, y: number) => Promise<boolean>;
 }
 
 const AUTO_KEY = "freelatex:autocompile";
@@ -60,13 +60,18 @@ async function analyze(projectId: string, result: CompileResult): Promise<LogEnt
   return parseLatexLog(result.log ?? "", { mainFile: result.mainFile, projectFiles }, result.output);
 }
 
-function toSync(result: CompileResult): SyncData | null {
-  if (!result.synctex) return null;
+/** Carga el SyncTeX del resultado en el worker. Devuelve si hay datos. */
+async function loadSync(result: CompileResult): Promise<boolean> {
   try {
-    return parseSynctex(result.synctex, result.mainFile);
+    if (!result.synctex) {
+      await synctexClient.clear();
+      return false;
+    }
+    await synctexClient.load(result.synctex, result.mainFile);
+    return true;
   } catch (err) {
     console.warn("SyncTeX no válido", err);
-    return null;
+    return false;
   }
 }
 
@@ -76,7 +81,7 @@ export const useCompileStore = create<CompileStore>((set, get) => ({
   result: null,
   pdf: null,
   entries: [],
-  sync: null,
+  syncReady: false,
   highlight: null,
   showLog: false,
   requestError: null,
@@ -91,7 +96,7 @@ export const useCompileStore = create<CompileStore>((set, get) => ({
       result: null,
       pdf: null,
       entries: [],
-      sync: null,
+      syncReady: false,
       highlight: null,
       showLog: false,
       requestError: null,
@@ -103,7 +108,9 @@ export const useCompileStore = create<CompileStore>((set, get) => ({
     if (cached) {
       const entries = await analyze(projectId, cached);
       if (get().projectId !== projectId) return;
-      set({ result: cached, pdf: cached.pdf, phase: "done", entries, sync: toSync(cached) });
+      set({ result: cached, pdf: cached.pdf, phase: "done", entries });
+      const syncReady = await loadSync(cached);
+      if (get().projectId === projectId) set({ syncReady });
     } else {
       // Primera vez que se abre: compilar para mostrar el PDF (como Overleaf).
       const project = await db.projects.get(projectId);
@@ -126,9 +133,12 @@ export const useCompileStore = create<CompileStore>((set, get) => ({
       const result = await compileProject(projectId);
       const entries = await analyze(projectId, result);
       if (get().projectId !== projectId) return;
+      set({ phase: "done", result, pdf: result.pdf ?? get().pdf, entries, highlight: null });
       // Si no hay PDF nuevo, se sigue mostrando el anterior con su SyncTeX.
-      const sync = result.pdf ? toSync(result) : get().sync;
-      set({ phase: "done", result, pdf: result.pdf ?? get().pdf, entries, sync, highlight: null });
+      if (result.pdf) {
+        const syncReady = await loadSync(result);
+        if (get().projectId === projectId) set({ syncReady });
+      }
       await db.outputs.put({ ...result, pdf: result.pdf ?? get().pdf, projectId });
     } catch (err) {
       if (get().projectId !== projectId) return;
@@ -140,19 +150,18 @@ export const useCompileStore = create<CompileStore>((set, get) => ({
 
   setShowLog: (showLog) => set({ showLog }),
 
-  syncToPdf: (file, line) => {
-    const { sync, pdf } = get();
-    if (!sync || !pdf) return false;
-    const found = forwardSearch(sync, file, line);
+  syncToPdf: async (file, line) => {
+    const { syncReady, pdf } = get();
+    if (!syncReady || !pdf) return false;
+    const found = await synctexClient.forward(file, line);
     if (!found) return false;
     set({ highlight: { ...found, nonce: (get().highlight?.nonce ?? 0) + 1 }, showLog: false });
     return true;
   },
 
-  syncToCode: (page, x, y) => {
-    const { sync } = get();
-    if (!sync) return false;
-    const found = reverseSearch(sync, page, x, y);
+  syncToCode: async (page, x, y) => {
+    if (!get().syncReady) return false;
+    const found = await synctexClient.reverse(page, x, y);
     if (!found) return false;
     useEditorStore.getState().goTo(found.file, found.line);
     return true;

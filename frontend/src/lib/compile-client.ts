@@ -2,7 +2,7 @@ import type { CompileResult, CompileStatus, Engine } from "@/types/project";
 import { COMPILER_URL } from "./config";
 import { db, type FreeLatexDB } from "./db";
 import { getProjectFiles } from "./projects";
-import { writeZip } from "./zip";
+import { writeZipAsync } from "./zip";
 
 /** Error al preparar o enviar la compilación (no un error de LaTeX). */
 export class CompileRequestError extends Error {
@@ -54,7 +54,7 @@ export async function compileProject(projectId: string, opts: CompileOptions = {
     throw new CompileRequestError(`El archivo principal "${mainFile}" no existe`);
   }
 
-  const zip = writeZip(files);
+  const zip = await writeZipAsync(files);
   const form = new FormData();
   form.append("project", new Blob([zip as BlobPart], { type: "application/zip" }), "project.zip");
   form.append("mainFile", mainFile);

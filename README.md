@@ -64,6 +64,16 @@ npm run dev
 
 Abre <http://localhost:3000>. Arriba a la derecha debe aparecer **"Compilador disponible"** en verde.
 
+### Modo rápido (producción)
+
+`npm run dev` es el modo de desarrollo: recarga al instante cuando cambias el código, pero es bastante más lento al usar la web. Para trabajar en una tesis grande usa el modo producción (detén antes `npm run dev`):
+
+```bash
+npm start
+```
+
+Compila la web una vez (tarda un minuto) y la sirve en <http://localhost:3000>.
+
 ### 5. Detenerlo
 
 - La web: `Ctrl + C` en la terminal donde corre `npm run dev`.
@@ -119,6 +129,7 @@ Todos se ejecutan desde la raíz del repositorio.
 | `npm run compiler:down` | Detiene el compilador |
 | `npm run compiler:logs` | Muestra los logs del compilador en vivo |
 | `npm run dev` | Arranca la web en modo desarrollo |
+| `npm start` | Compila y arranca la web en modo producción (más fluida) |
 | `npm test` | Ejecuta los tests del frontend |
 | `npm run smoke` | Compila `examples/basico` contra el compilador y guarda el PDF en `backend/smoke-output/` |
 
@@ -147,6 +158,7 @@ curl -F project=@ejemplo.zip -F mainFile=main.tex -F engine=pdflatex http://loca
 | Error de CORS en la consola del navegador | El compilador solo acepta peticiones desde `http://localhost:3000`. Si usas otro origen, cambia `CORS_ORIGIN` en `docker/docker-compose.yml`. |
 | Cambié código en `backend/` y no se nota | El backend corre dentro de la imagen: vuelve a ejecutar `npm run compiler:up` para reconstruirla. |
 | Un cambio en el código de la web no se refleja | Recarga la página. Si sigue igual (pasa a veces con `globals.css`), detén `npm run dev` con `Ctrl + C` y vuelve a lanzarlo. |
+| La web va lenta mientras compila | El compilador usa hasta 2 núcleos y 2 GB de RAM en Docker. Si tu equipo va justo, baja `cpus` en `docker/docker-compose.yml` y usa `npm start` en lugar de `npm run dev`. |
 | Mis proyectos no aparecen | Se guardan en el navegador (IndexedDB). Otro navegador, una ventana privada o borrar los datos del sitio no los muestran. Descarga el ZIP para guardar una copia. |
 
 ---

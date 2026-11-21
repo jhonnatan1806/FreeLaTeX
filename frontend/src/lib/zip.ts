@@ -1,4 +1,4 @@
-import { unzipSync, zipSync, type Unzipped } from "fflate";
+import { unzip, unzipSync, zip, zipSync, type AsyncZippable, type Unzipped, type Zippable } from "fflate";
 import type { FileEntry, FileKind } from "@/types/project";
 import { basename, extname, normalizePath } from "./paths";
 
@@ -93,7 +93,24 @@ export function readZip(bytes: Uint8Array): ReadZipResult {
   } catch {
     throw new Error("El archivo no es un ZIP válido");
   }
+  return processEntries(raw);
+}
 
+/** Igual que readZip, pero descomprime en Web Workers (no bloquea la interfaz). */
+export function readZipAsync(bytes: Uint8Array): Promise<ReadZipResult> {
+  return new Promise((resolve, reject) => {
+    try {
+      unzip(bytes, (err, raw) => {
+        if (err) reject(new Error("El archivo no es un ZIP válido"));
+        else resolve(processEntries(raw));
+      });
+    } catch {
+      reject(new Error("El archivo no es un ZIP válido"));
+    }
+  });
+}
+
+function processEntries(raw: Unzipped): ReadZipResult {
   const skipped: ReadZipResult["skipped"] = [];
   const kept: { path: string; data: Uint8Array }[] = [];
 
@@ -132,9 +149,26 @@ export function fileBytes(file: Pick<FileEntry, "kind" | "text" | "data">): Uint
   return file.kind === "text" ? utf8Encoder.encode(file.text ?? "") : (file.data ?? new Uint8Array());
 }
 
+type ZipInput = Pick<FileEntry, "path" | "kind" | "text" | "data">[];
+
+/**
+ * Árbol para fflate. Los binarios (imágenes, PDF) ya suelen estar comprimidos:
+ * se guardan sin recomprimir (nivel 0), que es mucho más rápido.
+ */
+function zipTree(files: ZipInput): Zippable {
+  const tree: Zippable = {};
+  for (const f of files) tree[f.path] = [fileBytes(f), { level: f.kind === "binary" ? 0 : 6 }];
+  return tree;
+}
+
 /** Crea un zip con los archivos dados (rutas relativas). */
-export function writeZip(files: Pick<FileEntry, "path" | "kind" | "text" | "data">[]): Uint8Array {
-  const tree: Record<string, Uint8Array> = {};
-  for (const f of files) tree[f.path] = fileBytes(f);
-  return zipSync(tree, { level: 6 });
+export function writeZip(files: ZipInput): Uint8Array {
+  return zipSync(zipTree(files));
+}
+
+/** Igual que writeZip, pero comprime en Web Workers (no bloquea la interfaz). */
+export function writeZipAsync(files: ZipInput): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    zip(zipTree(files) as AsyncZippable, (err, data) => (err ? reject(err) : resolve(data)));
+  });
 }

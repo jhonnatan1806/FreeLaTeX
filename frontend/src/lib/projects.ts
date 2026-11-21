@@ -1,7 +1,7 @@
 import type { Engine, FileEntry, Project, ProjectFile } from "@/types/project";
 import { db, fileId, type FreeLatexDB } from "./db";
 import { detectMainFile } from "./detect-main";
-import { readZip, writeZip, type ReadZipResult } from "./zip";
+import { readZip, readZipAsync, writeZipAsync, type ReadZipResult } from "./zip";
 
 export const BLANK_TEMPLATE = String.raw`\documentclass[12pt]{article}
 \usepackage[utf8]{inputenc}
@@ -78,7 +78,15 @@ export interface ZipAnalysis extends ReadZipResult {
 
 /** Lee un zip y propone nombre y archivo principal, sin guardar nada. */
 export function analyzeZip(fileName: string, bytes: Uint8Array): ZipAnalysis {
-  const result = readZip(bytes);
+  return analyze(fileName, readZip(bytes));
+}
+
+/** Igual que analyzeZip, pero descomprime sin bloquear la interfaz. */
+export async function analyzeZipAsync(fileName: string, bytes: Uint8Array): Promise<ZipAnalysis> {
+  return analyze(fileName, await readZipAsync(bytes));
+}
+
+function analyze(fileName: string, result: ReadZipResult): ZipAnalysis {
   if (result.entries.length === 0) throw new Error("El ZIP no contiene archivos de proyecto");
   const { mainFile, candidates } = detectMainFile(result.entries);
   const fromFile = fileName.replace(/\.zip$/i, "").trim();
@@ -131,7 +139,7 @@ export async function exportProjectZip(
   if (!project) throw new Error("Proyecto no encontrado");
   const files = await getProjectFiles(id, database);
   const safeName = project.name.replace(/[\\/:*?"<>|]+/g, "_").trim() || "proyecto";
-  return { filename: `${safeName}.zip`, bytes: writeZip(files) };
+  return { filename: `${safeName}.zip`, bytes: await writeZipAsync(files) };
 }
 
 /** Descarga bytes como archivo en el navegador. */
@@ -142,5 +150,7 @@ export function downloadBytes(filename: string, bytes: Uint8Array, type = "appli
   a.href = url;
   a.download = filename;
   a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  // Margen amplio: si la página está ocupada, el navegador tarda en leer el blob
+  // y revocarlo antes hace que la descarga falle sin avisar.
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }

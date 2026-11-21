@@ -1,6 +1,7 @@
 "use client";
 
 import { useLiveQuery } from "dexie-react-hooks";
+import { memo } from "react";
 import { CloseIcon } from "@/components/ui/icons";
 import { db, fileId } from "@/lib/db";
 import { basename } from "@/lib/paths";
@@ -9,13 +10,13 @@ import { BinaryPreview } from "./binary-preview";
 import { CodeEditor, syncCursorToPdf } from "./code-editor";
 import { useCompileStore } from "@/store/compile-store";
 
-export function EditorPane({ projectId }: { projectId: string }) {
+export const EditorPane = memo(function EditorPane({ projectId }: { projectId: string }) {
   const openTabs = useEditorStore((s) => s.openTabs);
   const activePath = useEditorStore((s) => s.activePath);
   const setActive = useEditorStore((s) => s.setActive);
   const closeTab = useEditorStore((s) => s.closeTab);
   const revealPath = useEditorStore((s) => s.revealPath);
-  const hasPdf = useCompileStore((s) => s.sync !== null);
+  const hasPdf = useCompileStore((s) => s.syncReady);
 
   // Solo el tipo del archivo activo (y los datos si es binario).
   const active = useLiveQuery(async () => {
@@ -97,7 +98,7 @@ export function EditorPane({ projectId }: { projectId: string }) {
       </div>
     </div>
   );
-}
+});
 
 function EmptyState() {
   return (

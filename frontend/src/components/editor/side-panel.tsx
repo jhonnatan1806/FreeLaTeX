@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { FileTree } from "./file-tree";
 import { SearchPanel } from "./search-panel";
 
 type View = "files" | "search";
 
 /** Panel izquierdo: árbol de archivos o búsqueda en el proyecto (Ctrl+Shift+F). */
-export function SidePanel({ projectId, mainFile }: { projectId: string; mainFile: string | null }) {
+export const SidePanel = memo(function SidePanel({ projectId, mainFile }: { projectId: string; mainFile: string | null }) {
   const [view, setView] = useState<View>("files");
   const [focusToken, setFocusToken] = useState(0);
 
@@ -49,7 +49,7 @@ export function SidePanel({ projectId, mainFile }: { projectId: string; mainFile
       </div>
     </div>
   );
-}
+});
 
 function Tab({ active, onClick, title, children }: { active: boolean; onClick: () => void; title?: string; children: React.ReactNode }) {
   return (

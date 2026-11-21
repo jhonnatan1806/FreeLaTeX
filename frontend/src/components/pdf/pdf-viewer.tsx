@@ -1,7 +1,7 @@
 "use client";
 
 import type { PDFDocumentLoadingTask, PDFPageProxy, RenderTask } from "pdfjs-dist";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import type { PdfRect } from "@/lib/synctex";
 
 type PdfJs = typeof import("pdfjs-dist");
@@ -43,6 +43,17 @@ interface PageInfo {
 
 const PAGE_GAP = 12;
 const PADDING = 16;
+/** Más allá de 2× la nitidez apenas mejora y el coste de pintar se dispara. */
+const MAX_PIXEL_RATIO = 2;
+
+/**
+ * Cola global de pintado: una página cada vez. pdf.js dibuja en el hilo principal;
+ * pintar muchas a la vez (al hacer scroll rápido) es lo que bloquea la interfaz.
+ */
+let renderQueue: Promise<void> = Promise.resolve();
+function enqueueRender(job: () => Promise<void>): void {
+  renderQueue = renderQueue.then(job, job);
+}
 
 export function PdfViewer({ data, zoom, onInfo, highlight, onPageDoubleClick }: PdfViewerProps) {
   // Estado (no ref) porque las páginas lo usan como raíz del IntersectionObserver.
@@ -148,9 +159,11 @@ interface PdfPageProps {
   onDoubleClick?: (page: number, x: number, y: number) => void;
 }
 
-/** Una página: se renderiza solo cuando está cerca de la zona visible. */
-function PdfPage({ number, info, scale, root, highlight, onDoubleClick }: PdfPageProps) {
+/** Una página: se pinta solo cuando está cerca de la zona visible, y una sola vez por escala. */
+const PdfPage = memo(function PdfPage({ number, info, scale, root, highlight, onDoubleClick }: PdfPageProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  /** Lo que ya está pintado en el canvas: evita repintar al volver a una página. */
+  const painted = useRef<{ info: PageInfo; scale: number } | null>(null);
   const [visible, setVisible] = useState(false);
   const width = Math.floor(info.width * scale);
   const height = Math.floor(info.height * scale);
@@ -160,7 +173,7 @@ function PdfPage({ number, info, scale, root, highlight, onDoubleClick }: PdfPag
     if (!el) return;
     const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), {
       root,
-      rootMargin: "600px 0px",
+      rootMargin: "400px 0px",
     });
     observer.observe(el);
     return () => observer.disconnect();
@@ -169,26 +182,30 @@ function PdfPage({ number, info, scale, root, highlight, onDoubleClick }: PdfPag
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!visible || !canvas) return;
+    if (painted.current?.info === info && painted.current.scale === scale) return;
     let task: RenderTask | null = null;
     let cancelled = false;
 
-    // Renderizar en un canvas aparte y copiar al terminar: sin parpadeo al recompilar.
-    const ratio = window.devicePixelRatio || 1;
-    const viewport = info.page.getViewport({ scale: scale * ratio });
-    const offscreen = document.createElement("canvas");
-    offscreen.width = Math.floor(viewport.width);
-    offscreen.height = Math.floor(viewport.height);
-    task = info.page.render({ canvas: offscreen, viewport });
-    task.promise
-      .then(() => {
-        if (cancelled) return;
-        canvas.width = offscreen.width;
-        canvas.height = offscreen.height;
-        canvas.getContext("2d")?.drawImage(offscreen, 0, 0);
-      })
-      .catch(() => {
-        // cancelado o documento destruido
-      });
+    enqueueRender(async () => {
+      if (cancelled) return; // dejó de ser visible mientras esperaba
+      // Renderizar en un canvas aparte y copiar al terminar: sin parpadeo al recompilar.
+      const ratio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
+      const viewport = info.page.getViewport({ scale: scale * ratio });
+      const offscreen = document.createElement("canvas");
+      offscreen.width = Math.floor(viewport.width);
+      offscreen.height = Math.floor(viewport.height);
+      task = info.page.render({ canvas: offscreen, viewport });
+      try {
+        await task.promise;
+      } catch {
+        return; // cancelado o documento destruido
+      }
+      if (cancelled) return;
+      canvas.width = offscreen.width;
+      canvas.height = offscreen.height;
+      canvas.getContext("2d")?.drawImage(offscreen, 0, 0);
+      painted.current = { info, scale };
+    });
 
     return () => {
       cancelled = true;
@@ -220,4 +237,4 @@ function PdfPage({ number, info, scale, root, highlight, onDoubleClick }: PdfPag
         ))}
     </div>
   );
-}
+});

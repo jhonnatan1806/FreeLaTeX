@@ -141,6 +141,7 @@ export function EditorLayout({ projectId }: { projectId: string }) {
               </option>
             ))}
           </select>
+          <DownloadPdfButton name={project.name} />
           <Button
             className="!py-1 text-xs"
             onClick={async () => {
@@ -170,6 +171,16 @@ export function EditorLayout({ projectId }: { projectId: string }) {
         </Group>
       )}
     </div>
+  );
+}
+
+function DownloadPdfButton({ name }: { name: string }) {
+  const pdf = useCompileStore((s) => s.pdf);
+  if (!pdf) return null;
+  return (
+    <Button className="!py-1 text-xs" onClick={() => downloadBytes(`${name}.pdf`, pdf, "application/pdf")}>
+      Descargar PDF
+    </Button>
   );
 }
 

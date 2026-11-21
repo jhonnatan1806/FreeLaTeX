@@ -13,7 +13,7 @@ import { applyDiagnostics, jumpToLine } from "./diagnostics";
 /** Muestra en el PDF la línea del cursor (SyncTeX). */
 export function syncCursorToPdf() {
   const cursor = useEditorStore.getState().getCursor();
-  if (cursor) useCompileStore.getState().syncToPdf(cursor.path, cursor.line);
+  if (cursor) void useCompileStore.getState().syncToPdf(cursor.path, cursor.line);
 }
 
 /** Espera tras la última pulsación antes de guardar en IndexedDB. */

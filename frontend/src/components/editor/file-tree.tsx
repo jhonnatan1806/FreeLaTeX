@@ -34,6 +34,7 @@ import { buildTree, isWithin, joinPath, type TreeNode } from "@/lib/tree";
 import { fileBytes } from "@/lib/zip";
 import { useCompileStore } from "@/store/compile-store";
 import { useEditorStore } from "@/store/editor-store";
+import { useShallow } from "zustand/react/shallow";
 
 const IMAGE_EXT = new Set([".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".svg", ".eps", ".pdf", ".tif", ".tiff"]);
 const DRAG_TYPE = "application/x-freelatex-path";
@@ -56,13 +57,16 @@ export function FileTree({ projectId, mainFile }: FileTreeProps) {
     return buildTree((fileIds ?? []).map(strip), (folderIds ?? []).map(strip));
   }, [fileIds, folderIds, projectId]);
 
-  const store = useEditorStore();
+  // Solo lo que el árbol pinta; las acciones se leen con getState() (no re-renderizan).
+  const { expanded, selected, activePath } = useEditorStore(
+    useShallow((s) => ({ expanded: s.expanded, selected: s.selected, activePath: s.activePath })),
+  );
+  const store = useEditorStore.getState();
   const entries = useCompileStore((s) => s.entries);
   const errorFiles = useMemo(
     () => entries.filter((e) => e.level === "error" && e.file).map((e) => e.file!),
     [entries],
   );
-  const { expanded, selected, activePath } = store;
 
   const [renaming, setRenaming] = useState<string | null>(null);
   const [creating, setCreating] = useState<Creating>(null);

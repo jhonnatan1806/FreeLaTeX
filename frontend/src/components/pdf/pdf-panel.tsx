@@ -1,16 +1,31 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { downloadBytes } from "@/lib/projects";
 import { useCompileStore } from "@/store/compile-store";
+import { useShallow } from "zustand/react/shallow";
 import { LogBadges, LogPanel } from "./log-panel";
 import { PdfViewer, type ZoomMode } from "./pdf-viewer";
 
 const ZOOM_STEPS = [0.5, 0.67, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
 
-export function PdfPanel({ projectName }: { projectName: string }) {
-  const { phase, result, pdf, requestError, autoCompile, compile, setAutoCompile, showLog, setShowLog, highlight, syncToCode } =
-    useCompileStore();
+export const PdfPanel = memo(function PdfPanel({ projectName }: { projectName: string }) {
+  const { phase, result, pdf, requestError, autoCompile, showLog, highlight } = useCompileStore(
+    useShallow((s) => ({
+      phase: s.phase,
+      result: s.result,
+      pdf: s.pdf,
+      requestError: s.requestError,
+      autoCompile: s.autoCompile,
+      showLog: s.showLog,
+      highlight: s.highlight,
+    })),
+  );
+  const { compile, setAutoCompile, setShowLog } = useCompileStore.getState();
+  const onPageDoubleClick = useCallback(
+    (page: number, x: number, y: number) => void useCompileStore.getState().syncToCode(page, x, y),
+    [],
+  );
   const [zoom, setZoom] = useState<ZoomMode>("fit-width");
   const [info, setInfo] = useState({ numPages: 0, scale: 1 });
   const onInfo = useCallback((i: { numPages: number; scale: number }) => setInfo(i), []);
@@ -117,7 +132,7 @@ export function PdfPanel({ projectName }: { projectName: string }) {
             zoom={zoom}
             onInfo={onInfo}
             highlight={highlight}
-            onPageDoubleClick={(page, x, y) => void syncToCode(page, x, y)}
+            onPageDoubleClick={onPageDoubleClick}
           />
         ) : (
           <div className="flex h-full items-center justify-center p-6 text-center text-sm text-zinc-500">
@@ -127,10 +142,11 @@ export function PdfPanel({ projectName }: { projectName: string }) {
       </div>
     </div>
   );
-}
+});
 
 function StatusText() {
-  const { phase, result } = useCompileStore();
+  const phase = useCompileStore((s) => s.phase);
+  const result = useCompileStore((s) => s.result);
   if (phase === "compiling" || !result) return null;
   const seconds = (result.durationMs / 1000).toFixed(1);
   return (

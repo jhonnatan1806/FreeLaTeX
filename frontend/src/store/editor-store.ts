@@ -160,7 +160,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     set({ expanded, selected: path });
   },
 
-  setSaveStatus: (saveStatus) => set({ saveStatus }),
+  // Se llama en cada pulsación: no notificar si no cambia.
+  setSaveStatus: (saveStatus) => {
+    if (get().saveStatus !== saveStatus) set({ saveStatus });
+  },
   setFlushSaves: (flushSaves) => set({ flushSaves }),
 
   onRenamed: (from, to) => {

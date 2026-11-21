@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Select, TextInput } from "@/components/ui/field";
 import { formatBytes } from "@/lib/format";
-import { analyzeZip, createProject, type ZipAnalysis } from "@/lib/projects";
+import { analyzeZipAsync, createProject, type ZipAnalysis } from "@/lib/projects";
 
 /** Tamaño máximo de zip que aceptamos en el navegador. */
 const MAX_ZIP_BYTES = 100 * 1024 * 1024;
@@ -33,7 +33,7 @@ export function ImportZip() {
       return;
     }
     try {
-      const result = analyzeZip(file.name, new Uint8Array(await file.arrayBuffer()));
+      const result = await analyzeZipAsync(file.name, new Uint8Array(await file.arrayBuffer()));
       setAnalysis(result);
       setName(result.suggestedName);
       setMainFile(result.mainFile ?? "");
