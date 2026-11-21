@@ -37,6 +37,28 @@ export interface FileEntry {
   size: number;
 }
 
+export type CompileStatus = "success" | "error" | "timeout";
+
+/** Resultado de una compilación. */
+export interface CompileResult {
+  status: CompileStatus;
+  exitCode: number | null;
+  pdf: Uint8Array | null;
+  log: string | null;
+  synctex: Uint8Array | null;
+  /** Salida de consola de latexmk. */
+  output: string;
+  durationMs: number;
+  compiledAt: number;
+  engine: Engine;
+  mainFile: string;
+}
+
+/** Último resultado guardado de un proyecto. */
+export interface CompileOutput extends CompileResult {
+  projectId: string;
+}
+
 /** Carpeta vacía explícita (el árbol también deduce carpetas de las rutas). */
 export interface ProjectFolder {
   id: string;

@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { extname } from "@/lib/paths";
 import { downloadBytes, exportProjectZip, updateProjectSettings } from "@/lib/projects";
+import { PdfPanel } from "@/components/pdf/pdf-panel";
+import { useCompileStore } from "@/store/compile-store";
 import { useEditorStore, type SaveStatus } from "@/store/editor-store";
 import { ENGINES, type Engine } from "@/types/project";
 import { EditorPane } from "./editor-pane";
@@ -36,6 +38,7 @@ export function EditorLayout({ projectId }: { projectId: string }) {
   useEffect(() => {
     if (project) {
       useEditorStore.getState().init(projectId, project.mainFile);
+      void useCompileStore.getState().init(projectId);
     }
   }, [project, projectId]);
 
@@ -47,16 +50,35 @@ export function EditorLayout({ projectId }: { projectId: string }) {
     for (const tab of openTabs) if (!existing.has(tab)) closeTab(tab);
   }, [ready, allPaths]);
 
-  // Ctrl+S fuera del editor: evitar el diálogo "Guardar página" del navegador.
+  // Atajos fuera del editor (dentro, los gestiona CodeMirror y marca defaultPrevented).
+  // Ctrl+S guarda y recompila (y evita el diálogo "Guardar página"); Ctrl+Enter recompila.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+      if (e.defaultPrevented || !(e.ctrlKey || e.metaKey)) return;
+      if (e.key.toLowerCase() === "s" || e.key === "Enter") {
         e.preventDefault();
-        void useEditorStore.getState().flushSaves();
+        void useCompileStore.getState().compile();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Autocompilar: tras cada guardado, si está activado (con margen por si se sigue escribiendo).
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const unsubscribe = useEditorStore.subscribe((state, prev) => {
+      if (state.saveStatus === "saved" && prev.saveStatus === "saving" && useCompileStore.getState().autoCompile) {
+        clearTimeout(timer);
+        timer = setTimeout(() => void useCompileStore.getState().compile(), 1000);
+      } else if (state.saveStatus === "saving") {
+        clearTimeout(timer);
+      }
+    });
+    return () => {
+      clearTimeout(timer);
+      unsubscribe();
+    };
   }, []);
 
   if (project === undefined) return <p className="p-8 text-sm text-zinc-500">Cargando…</p>;
@@ -143,14 +165,7 @@ export function EditorLayout({ projectId }: { projectId: string }) {
           </Panel>
           <ResizeHandle />
           <Panel id="pdf" defaultSize="35" minSize="15">
-            <div className="flex h-full flex-col bg-zinc-100 dark:bg-zinc-900">
-              <div className="flex h-9 shrink-0 items-center border-b border-zinc-200 px-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:border-zinc-800">
-                PDF
-              </div>
-              <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-zinc-500">
-                La compilación y la vista previa del PDF llegan en la fase 5.
-              </div>
-            </div>
+            <PdfPanel projectName={project.name} />
           </Panel>
         </Group>
       )}

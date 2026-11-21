@@ -77,11 +77,12 @@ const theme = EditorView.theme({
 export interface SetupOptions {
   path: string;
   onSave: () => void;
+  onCompile: () => void;
   onChange: (state: import("@codemirror/state").EditorState, docChanged: boolean) => void;
 }
 
 /** Extensiones de CodeMirror para un archivo. */
-export function editorExtensions({ path, onSave, onChange }: SetupOptions): Extension[] {
+export function editorExtensions({ path, onSave, onCompile, onChange }: SetupOptions): Extension[] {
   const isLatex = LATEX_EXT.has(extname(path));
   return [
     lineNumbers(),
@@ -102,6 +103,8 @@ export function editorExtensions({ path, onSave, onChange }: SetupOptions): Exte
     EditorView.lineWrapping,
     keymap.of([
       { key: "Mod-s", preventDefault: true, run: () => (onSave(), true) },
+      // Antes que defaultKeymap, que usa Mod-Enter para insertar una línea.
+      { key: "Mod-Enter", preventDefault: true, run: () => (onCompile(), true) },
       ...closeBracketsKeymap,
       ...defaultKeymap,
       ...searchKeymap,

@@ -100,9 +100,10 @@ export async function updateProjectSettings(
 }
 
 export async function deleteProject(id: string, database: FreeLatexDB = db) {
-  await database.transaction("rw", database.projects, database.files, database.folders, async () => {
+  await database.transaction("rw", [database.projects, database.files, database.folders, database.outputs], async () => {
     await database.files.where("projectId").equals(id).delete();
     await database.folders.where("projectId").equals(id).delete();
+    await database.outputs.delete(id);
     await database.projects.delete(id);
   });
 }

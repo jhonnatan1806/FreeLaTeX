@@ -92,7 +92,9 @@ npm run dev
 | Acción | Cómo |
 |---|---|
 | Abrir un archivo | Clic en el árbol de la izquierda (se abre en una pestaña) |
-| Guardar | Automático al dejar de escribir; `Ctrl + S` fuerza el guardado |
+| Guardar | Automático al dejar de escribir |
+| Compilar | Botón **Recompilar**, `Ctrl + Enter` o `Ctrl + S` (guarda y compila). Marca **Auto** para compilar cada vez que se guarda |
+| Ver el log | Botón **Log** en la barra del PDF |
 | Buscar / reemplazar | `Ctrl + F` dentro del editor |
 | Crear archivo o carpeta | Iconos de la barra del árbol, o clic derecho sobre una carpeta |
 | Renombrar | `F2` sobre el elemento del árbol, o clic derecho → Renombrar |
@@ -152,7 +154,7 @@ curl -F project=@ejemplo.zip -F mainFile=main.tex -F engine=pdflatex http://loca
 - [x] Fase 2: proyectos locales en IndexedDB
 - [x] Fase 3: importar y exportar ZIP
 - [x] Fase 4: editor y árbol de archivos
-- [ ] Fase 5: compilar y ver el PDF
+- [x] Fase 5: compilar y ver el PDF
 - [ ] Fase 6: mapeo de errores
 - [ ] Fase 7: SyncTeX y autocompletado
 - [ ] Fase 8: producción

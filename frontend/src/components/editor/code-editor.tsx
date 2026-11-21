@@ -5,6 +5,7 @@ import { EditorView } from "@codemirror/view";
 import { useEffect, useRef } from "react";
 import { db, fileId } from "@/lib/db";
 import { saveFileText } from "@/lib/file-ops";
+import { useCompileStore } from "@/store/compile-store";
 import { useEditorStore } from "@/store/editor-store";
 import { editorExtensions } from "./codemirror-setup";
 
@@ -104,7 +105,9 @@ export function CodeEditor({ projectId, path }: CodeEditorProps) {
         doc: file?.text ?? "",
         extensions: editorExtensions({
           path,
-          onSave: () => void useEditorStore.getState().flushSaves(),
+          // Como en Overleaf: Ctrl+S guarda y recompila.
+          onSave: () => void useCompileStore.getState().compile(),
+          onCompile: () => void useCompileStore.getState().compile(),
           onChange: (next, docChanged) => {
             // La ruta puede haber cambiado (renombrado): usar siempre la del ref.
             const p = currentPath.current;
