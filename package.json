@@ -1,0 +1,14 @@
+{
+  "name": "freelatex",
+  "private": true,
+  "description": "Atajos para trabajar con FreeLaTeX desde la raíz del repositorio",
+  "scripts": {
+    "setup": "npm --prefix frontend install && npm --prefix backend install",
+    "compiler:up": "docker compose -f docker/docker-compose.yml up -d --build",
+    "compiler:down": "docker compose -f docker/docker-compose.yml down",
+    "compiler:logs": "docker compose -f docker/docker-compose.yml logs -f compiler",
+    "dev": "npm --prefix frontend run dev",
+    "test": "npm --prefix frontend test",
+    "smoke": "cd backend && node scripts/smoke.mjs ../examples/basico main.tex pdflatex"
+  }
+}

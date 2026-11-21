@@ -8,39 +8,126 @@ Ver [PROYECTO.md](PROYECTO.md) para la arquitectura y el plan por fases.
 
 | Carpeta | Contenido |
 |---|---|
-| `frontend/` | Next.js (App Router) + TypeScript + Tailwind |
-| `backend/` | Servicio de compilación (Node + Fastify) que ejecuta `latexmk` |
+| `frontend/` | La web: Next.js + TypeScript + Tailwind (puerto **3000**) |
+| `backend/` | El compilador: Node + Fastify, ejecuta `latexmk` (puerto **4000**) |
 | `docker/` | Imagen del compilador con TeX Live y `docker-compose.yml` |
+| `examples/` | Proyectos LaTeX de prueba |
 
-## Desarrollo
+---
 
-Requisitos: Node 22+ y Docker.
+## Cómo iniciarlo
+
+### 1. Requisitos (una sola vez)
+
+| Herramienta | Versión | Comprobar |
+|---|---|---|
+| [Node.js](https://nodejs.org) | 22 o superior | `node -v` |
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | cualquiera reciente | `docker --version` |
+| Git | — | `git --version` |
+
+> No necesitas instalar LaTeX en tu máquina: TeX Live va dentro del contenedor Docker.
+
+### 2. Clonar e instalar dependencias (una sola vez)
 
 ```bash
-# Compilador (puerto 4000)
-docker compose -f docker/docker-compose.yml up --build
+git clone https://github.com/jhonnatan1806/FreeLaTeX.git
+cd FreeLaTeX
+npm run setup
+```
 
-# Frontend (puerto 3000)
-cd frontend
-npm install
+`npm run setup` instala las dependencias de `frontend/` y `backend/`.
+
+Opcional: copia la configuración del frontend si quieres cambiar la URL del compilador (por defecto es `http://localhost:4000`):
+
+```bash
+cp frontend/.env.example frontend/.env.local
+```
+
+### 3. Arrancar el compilador (Docker)
+
+Abre **Docker Desktop** y espera a que diga que está en marcha. Luego, desde la raíz del repositorio:
+
+```bash
+npm run compiler:up
+```
+
+- La **primera vez** tarda varios minutos: descarga TeX Live y construye la imagen (~1,9 GB). Las siguientes veces arranca en segundos.
+- Queda corriendo en segundo plano. Comprueba que responde abriendo <http://localhost:4000/health>; debe mostrar `{"ok":true,...}`.
+
+### 4. Arrancar la web
+
+En la misma terminal (o en otra):
+
+```bash
 npm run dev
 ```
 
-La primera construcción de la imagen descarga TeX Live (imagen final de ~1,9 GB).
+Abre <http://localhost:3000>. Arriba a la derecha debe aparecer **"Compilador disponible"** en verde.
 
-Probar el compilador con los proyectos de [examples/](examples/):
+### 5. Detenerlo
+
+- La web: `Ctrl + C` en la terminal donde corre `npm run dev`.
+- El compilador:
+
+```bash
+npm run compiler:down
+```
+
+### Uso diario (resumen)
+
+Con todo ya instalado, cada día solo necesitas:
+
+```bash
+npm run compiler:up
+```
+
+```bash
+npm run dev
+```
+
+---
+
+## Comandos útiles
+
+Todos se ejecutan desde la raíz del repositorio.
+
+| Comando | Qué hace |
+|---|---|
+| `npm run setup` | Instala dependencias de frontend y backend |
+| `npm run compiler:up` | Construye (si hace falta) y arranca el compilador en Docker |
+| `npm run compiler:down` | Detiene el compilador |
+| `npm run compiler:logs` | Muestra los logs del compilador en vivo |
+| `npm run dev` | Arranca la web en modo desarrollo |
+| `npm test` | Ejecuta los tests del frontend |
+| `npm run smoke` | Compila `examples/basico` contra el compilador y guarda el PDF en `backend/smoke-output/` |
+
+Probar otro ejemplo o motor con el script de prueba:
 
 ```bash
 cd backend
-npm install
-node scripts/smoke.mjs ../examples/basico main.tex pdflatex
+node scripts/smoke.mjs ../examples/subcarpeta tesis/main.tex xelatex
 ```
 
-El PDF y el log quedan en `backend/smoke-output/`. También se puede usar `curl`:
+O directamente con `curl`:
 
 ```bash
 curl -F project=@ejemplo.zip -F mainFile=main.tex -F engine=pdflatex http://localhost:4000/compile
 ```
+
+---
+
+## Problemas frecuentes
+
+| Síntoma | Solución |
+|---|---|
+| `failed to connect to the docker API` / `daemon is not running` | Docker Desktop no está abierto. Ábrelo, espera a que arranque y repite `npm run compiler:up`. |
+| La web dice **"Compilador no disponible"** | El contenedor no está corriendo: `npm run compiler:up`. Si sigue igual, revisa `npm run compiler:logs`. |
+| `port is already allocated` (4000) o `Port 3000 is in use` | Otro programa usa el puerto. Ciérralo, o cambia el puerto en `docker/docker-compose.yml` (y `NEXT_PUBLIC_COMPILER_URL` en `frontend/.env.local`). |
+| Error de CORS en la consola del navegador | El compilador solo acepta peticiones desde `http://localhost:3000`. Si usas otro origen, cambia `CORS_ORIGIN` en `docker/docker-compose.yml`. |
+| Cambié código en `backend/` y no se nota | El backend corre dentro de la imagen: vuelve a ejecutar `npm run compiler:up` para reconstruirla. |
+| Mis proyectos no aparecen | Se guardan en el navegador (IndexedDB). Otro navegador, una ventana privada o borrar los datos del sitio no los muestran. Descarga el ZIP para guardar una copia. |
+
+---
 
 ## Estado
 
@@ -49,10 +136,7 @@ curl -F project=@ejemplo.zip -F mainFile=main.tex -F engine=pdflatex http://loca
 - [x] Fase 2: proyectos locales en IndexedDB
 - [x] Fase 3: importar y exportar ZIP
 - [ ] Fase 4: editor y árbol de archivos
-
-## Tests
-
-```bash
-cd frontend
-npm test
-```
+- [ ] Fase 5: compilar y ver el PDF
+- [ ] Fase 6: mapeo de errores
+- [ ] Fase 7: SyncTeX y autocompletado
+- [ ] Fase 8: producción
